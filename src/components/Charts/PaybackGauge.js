@@ -1,6 +1,5 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useMemo, useCallback } from 'react';
 import { Box, Typography } from '@mui/material';
-import { useTheme } from '@mui/material/styles';
 
 /**
  * PaybackGauge Component
@@ -13,20 +12,20 @@ const PaybackGauge = ({ paybackPeriod }) => {
   const noProfitCase = paybackPeriod === '-';
   
   // Define pastel colors for the gauge segments (matching the reference)
-  const colors = {
+  const colors = useMemo(() => ({
     good: '#c8e6c9',      // Light pastel green for 0-12 months
     average: '#fff3e0',   // Light pastel peach for 12-24 months
     warning: '#ffebee',   // Light pastel pink for 24-60 months
     noProfit: '#f5f5f5'   // Light gray for no profit
-  };
+  }), []);
   
   // Get the needle and value color based on the gauge section
-  const getValueColor = () => {
+  const getValueColor = useCallback(() => {
     if (noProfitCase) return '#9e9e9e';
     if (paybackPeriod <= 12) return '#78b47d'; // Green
     if (paybackPeriod <= 24) return '#f5b040'; // Orange/peach
     return '#e57373'; // Red/pink
-  };
+  }, [noProfitCase, paybackPeriod]);
   
   // Draw the gauge using canvas
   useEffect(() => {
