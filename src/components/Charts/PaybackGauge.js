@@ -1,30 +1,32 @@
 import React, { useEffect, useRef, useMemo, useCallback } from 'react';
 import { Box, Typography } from '@mui/material';
+import { useLanguage } from '../../context/LanguageContext';
 
 /**
  * PaybackGauge Component
  * Modern minimal gauge with rounded lines and pastel colors
  */
 const PaybackGauge = ({ paybackPeriod }) => {
+  const { t } = useLanguage(); // Get translation function
   const canvasRef = useRef(null);
   
   // Handle "no profit" case
   const noProfitCase = paybackPeriod === '-';
   
-  // Define pastel colors for the gauge segments (matching the reference)
+  // Define solid colors for the gauge segments (matching the reference)
   const colors = useMemo(() => ({
-    good: '#c8e6c9',      // Light pastel green for 0-12 months
-    average: '#fff3e0',   // Light pastel peach for 12-24 months
-    warning: '#ffebee',   // Light pastel pink for 24-60 months
-    noProfit: '#f5f5f5'   // Light gray for no profit
+    good: '#4CAF50',      // Solid green for 0-12 months
+    average: '#FF9800',   // Solid orange for 12-24 months
+    warning: '#F44336',   // Solid red for 24-60 months
+    noProfit: '#9E9E9E'   // Solid gray for no profit
   }), []);
   
   // Get the needle and value color based on the gauge section
   const getValueColor = useCallback(() => {
-    if (noProfitCase) return '#9e9e9e';
-    if (paybackPeriod <= 12) return '#78b47d'; // Green
-    if (paybackPeriod <= 24) return '#f5b040'; // Orange/peach
-    return '#e57373'; // Red/pink
+    if (noProfitCase) return '#9E9E9E'; // Gray
+    if (paybackPeriod <= 12) return '#4CAF50'; // Green
+    if (paybackPeriod <= 24) return '#FF9800'; // Orange
+    return '#F44336'; // Red
   }, [noProfitCase, paybackPeriod]);
   
   // Draw the gauge using canvas
@@ -89,8 +91,8 @@ const PaybackGauge = ({ paybackPeriod }) => {
     const majorTicks = [0, 12, 24, 60];
     const labelColors = {
       0: '#757575',
-      12: '#78b47d', // Green
-      24: '#f5b040', // Orange/peach
+      12: '#4CAF50', // Green
+      24: '#FF9800', // Orange
       60: '#757575'
     };
     
@@ -148,7 +150,7 @@ const PaybackGauge = ({ paybackPeriod }) => {
       py: 2
     }}>
       <Typography variant="h6" align="center" gutterBottom>
-        Investment Payback Period
+        {t('investmentPaybackPeriod')}
       </Typography>
       
       <Box sx={{ 
@@ -174,7 +176,7 @@ const PaybackGauge = ({ paybackPeriod }) => {
           mb: 1
         }}
       >
-        {noProfitCase ? '-' : `${paybackPeriod.toFixed(1)} months`}
+        {noProfitCase ? '-' : `${paybackPeriod.toFixed(1)} ${t('months')}`}
       </Typography>
       
       <Typography 
@@ -184,12 +186,12 @@ const PaybackGauge = ({ paybackPeriod }) => {
         sx={{ fontWeight: 500 }}
       >
         {noProfitCase 
-          ? 'No profit with current parameters' 
+          ? t('noProfitWithCurrentParameters') 
           : paybackPeriod <= 12 
-            ? 'Excellent payback period' 
+            ? t('excellentPaybackPeriod') 
             : paybackPeriod <= 24 
-              ? 'Good payback period' 
-              : 'Extended payback period'}
+              ? t('goodPaybackPeriod') 
+              : t('extendedPaybackPeriod')}
       </Typography>
     </Box>
   );

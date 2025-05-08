@@ -10,27 +10,9 @@ import {
   Chip
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
+import { useLanguage } from '../../context/LanguageContext';
 import { getPaybackStatus } from '../../utils/calculations';
 import ChartTabs from '../Charts/ChartTabs';
-
-// Helper function to format numbers with commas as thousands separators
-const formatNumber = (num, decimals = 0) => {
-  if (typeof num === 'string') return num;
-  return num.toLocaleString(undefined, { 
-    minimumFractionDigits: decimals,
-    maximumFractionDigits: decimals
-  });
-};
-
-// Helper function to format JPY currency
-const formatCurrency = (amount) => {
-  return `JPY ${formatNumber(Math.round(amount))}`;
-};
-
-// Helper function to format percentage
-const formatPercent = (value) => {
-  return `${value.toFixed(2)}%`;
-};
 
 /**
  * ResultsPanel Component
@@ -38,6 +20,26 @@ const formatPercent = (value) => {
  */
 const ResultsPanel = ({ results }) => {
   const theme = useTheme();
+  const { t } = useLanguage(); // Get translation function
+  
+  // Helper function to format numbers with commas as thousands separators
+  const formatNumber = (num, decimals = 0) => {
+    if (typeof num === 'string') return num;
+    return num.toLocaleString(undefined, { 
+      minimumFractionDigits: decimals,
+      maximumFractionDigits: decimals
+    });
+  };
+
+  // Helper function to format currency
+  const formatCurrency = (amount) => {
+    return `${t('currency')} ${formatNumber(Math.round(amount))}`;
+  };
+
+  // Helper function to format percentage
+  const formatPercent = (value) => {
+    return `${value.toFixed(2)}%`;
+  };
   
   // Add inputs to results for charts
   const enhancedResults = {
@@ -56,37 +58,37 @@ const ResultsPanel = ({ results }) => {
     switch(paybackStatus) {
       case 'good':
         return {
-          title: 'Excellent Investment',
-          color: theme.palette.success.main,
-          backgroundColor: theme.palette.success.light,
+          title: t('excellentInvestment'),
+          color: '#FFFFFF',
+          backgroundColor: theme.palette.success.main,
           icon: '✓'
         };
       case 'average':
         return {
-          title: 'Good Investment',
-          color: theme.palette.warning.main,
-          backgroundColor: theme.palette.warning.light,
+          title: t('goodInvestment'),
+          color: '#FFFFFF',
+          backgroundColor: theme.palette.warning.main,
           icon: '!'
         };
       case 'warning':
         return {
-          title: 'Consider Carefully',
-          color: theme.palette.error.main,
-          backgroundColor: theme.palette.error.light,
+          title: t('considerCarefully'),
+          color: '#FFFFFF',
+          backgroundColor: theme.palette.error.main,
           icon: '⚠'
         };
       case 'no-profit':
         return {
-          title: 'Not Profitable',
-          color: theme.palette.text.secondary,
-          backgroundColor: theme.palette.grey[200],
+          title: t('notProfitable'),
+          color: '#FFFFFF',
+          backgroundColor: '#757575',
           icon: '×'
         };
       default:
         return {
-          title: 'Results',
-          color: theme.palette.text.primary,
-          backgroundColor: theme.palette.background.paper,
+          title: t('simulationResults'),
+          color: '#FFFFFF',
+          backgroundColor: theme.palette.primary.main,
           icon: 'i'
         };
     }
@@ -136,23 +138,27 @@ const ResultsPanel = ({ results }) => {
     <Box>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
         <Typography variant="h5" fontWeight={600}>
-          Simulation Results
+          {t('simulationResults')}
         </Typography>
         <Fade in={true}>
           <Chip
-            icon={<Box component="span" sx={{ fontSize: '1rem', mr: 0.5 }}>{statusInfo.icon}</Box>}
+            icon={<Box component="span" sx={{ fontSize: '1rem', mr: 0.5, fontWeight: 'bold' }}>{statusInfo.icon}</Box>}
             label={statusInfo.title}
             sx={{
               fontWeight: 600,
               bgcolor: statusInfo.backgroundColor,
               color: statusInfo.color,
-              px: 1,
-              borderRadius: '16px',
-              boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+              px: 2,
+              py: 1,
+              borderRadius: '24px',
+              boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
+              fontSize: '0.95rem',
+              border: '2px solid',
+              borderColor: 'rgba(255, 255, 255, 0.3)',
               transition: 'all 0.3s ease',
               '&:hover': {
                 transform: 'scale(1.05)',
-                boxShadow: '0 3px 6px rgba(0,0,0,0.15)',
+                boxShadow: '0 3px 6px rgba(0,0,0,0.25)',
               }
             }}
           />
@@ -165,7 +171,7 @@ const ResultsPanel = ({ results }) => {
           <Fade in={true} timeout={400}>
             <Box>
               <ResultCard 
-                title="Monthly Sales" 
+                title={t('monthlySales')} 
                 value={formatCurrency(results.monthlySales)} 
                 large={true}
               />
@@ -176,7 +182,7 @@ const ResultsPanel = ({ results }) => {
           <Fade in={true} timeout={500}>
             <Box>
               <ResultCard 
-                title="Monthly Gross Profit" 
+                title={t('monthlyGrossProfit')} 
                 value={formatCurrency(results.monthlyGrossProfit)} 
                 large={true}
               />
@@ -191,7 +197,7 @@ const ResultsPanel = ({ results }) => {
           <Fade in={true} timeout={600}>
             <Box>
               <ResultCard 
-                title="Gross Profit Margin" 
+                title={t('grossProfitMargin')} 
                 value={formatPercent(results.grossProfitMargin)}
               />
             </Box>
@@ -201,8 +207,8 @@ const ResultsPanel = ({ results }) => {
           <Fade in={true} timeout={700}>
             <Box>
               <ResultCard 
-                title="Investment Payback Period" 
-                value={results.paybackPeriod === '-' ? 'N/A' : `${results.paybackPeriod.toFixed(1)} months`}
+                title={t('investmentPaybackPeriod')} 
+                value={results.paybackPeriod === '-' ? 'N/A' : `${results.paybackPeriod.toFixed(1)} ${t('months')}`}
               />
             </Box>
           </Fade>
@@ -211,7 +217,7 @@ const ResultsPanel = ({ results }) => {
           <Fade in={true} timeout={800}>
             <Box>
               <ResultCard 
-                title="Cost per Unit" 
+                title={t('costPerUnit')} 
                 value={formatCurrency(results.costPerUnit)}
               />
             </Box>
@@ -221,8 +227,8 @@ const ResultsPanel = ({ results }) => {
           <Fade in={true} timeout={900}>
             <Box>
               <ResultCard 
-                title="Operating Hours (monthly)" 
-                value={`${results.operatingHours.toFixed(1)} hours`}
+                title={t('operatingHours')} 
+                value={`${results.operatingHours.toFixed(1)} ${t('hours')}`}
               />
             </Box>
           </Fade>
@@ -259,20 +265,20 @@ const ResultsPanel = ({ results }) => {
         }}>
           <CardContent>
             <Typography variant="subtitle1" fontWeight={600} gutterBottom>
-              Production Details
+              {t('productionDetails')}
             </Typography>
             
             <Grid container spacing={3}>
               <Grid item xs={6}>
                 <SmallStat 
-                  title="Items per Print Job" 
-                  value={`${formatNumber(results.itemsPerPrintJob)} units`}
+                  title={t('itemsPerPrintJob')} 
+                  value={`${formatNumber(results.itemsPerPrintJob)} ${t('units')}`}
                 />
               </Grid>
               <Grid item xs={6}>
                 <SmallStat 
-                  title="Monthly Print Jobs" 
-                  value={`${formatNumber(results.monthlyPrintJobs)} jobs`}
+                  title={t('monthlyPrintJobs')} 
+                  value={`${formatNumber(results.monthlyPrintJobs)} ${t('jobs')}`}
                 />
               </Grid>
             </Grid>
@@ -293,32 +299,32 @@ const ResultsPanel = ({ results }) => {
         }}>
           <CardContent>
             <Typography variant="subtitle1" fontWeight={600} gutterBottom>
-              Ink Usage per Item
+              {t('inkUsagePerItem')}
             </Typography>
             
             <Grid container spacing={2} sx={{ mb: 2 }}>
               <Grid item xs={4}>
                 <SmallStat 
-                  title="White" 
-                  value={`${results.inkUsage.white} cc`}
+                  title={t('white')} 
+                  value={`${results.inkUsage.white} ${t('cc')}`}
                 />
               </Grid>
               <Grid item xs={4}>
                 <SmallStat 
-                  title="CMYK" 
-                  value={`${results.inkUsage.cmyk} cc`}
+                  title={t('cmyk')} 
+                  value={`${results.inkUsage.cmyk} ${t('cc')}`}
                 />
               </Grid>
               <Grid item xs={4}>
                 <SmallStat 
-                  title="Primer" 
-                  value={`${results.inkUsage.primer} cc`}
+                  title={t('primer')} 
+                  value={`${results.inkUsage.primer} ${t('cc')}`}
                 />
               </Grid>
             </Grid>
             
             <Typography variant="body2" sx={{ fontWeight: 500 }}>
-              Ink Cost per Unit: {formatCurrency(results.inkCostPerUnit)}
+              {t('inkCostPerUnit')}: {formatCurrency(results.inkCostPerUnit)}
             </Typography>
           </CardContent>
         </Card>
@@ -340,7 +346,7 @@ const ResultsPanel = ({ results }) => {
           }}
           disabled={true} // Will be enabled in Phase 2
         >
-          DOWNLOAD PDF
+          {t('downloadPDF')}
         </Button>
       </Box>
     </Box>

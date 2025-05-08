@@ -13,6 +13,7 @@ import {
   Fade
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
+import { useLanguage } from '../../context/LanguageContext';
 import PrinterInfoPopover from './PrinterInfoPopover';
 
 // Using SVG icons directly instead of emojis to match the design
@@ -55,6 +56,7 @@ const InfoIcon = () => (
  */
 const InputPanel = ({ inputs, onInputChange }) => {
   const theme = useTheme();
+  const { t } = useLanguage(); // Get translation function
   
   // State for printer info popover
   const [infoAnchorEl, setInfoAnchorEl] = useState(null);
@@ -425,9 +427,9 @@ const InputPanel = ({ inputs, onInputChange }) => {
     <Box>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3.5 }}>
         <Typography variant="h5" gutterBottom sx={{ fontWeight: 600, mt: 1, color: 'text.primary' }}>
-          Simulation Parameters
+          {t('simulationParameters')}
         </Typography>
-        <Tooltip title="Printer Specifications">
+        <Tooltip title={t('printerSpecifications')}>
           <Box 
             component="span" 
             onClick={handleInfoClick}
@@ -468,27 +470,27 @@ const InputPanel = ({ inputs, onInputChange }) => {
           }}
         >
           <CardContent sx={{ px: 3, py: 2.5 }}>
-            <SectionHeader icon={<DimensionsIcon />} title="Product Dimensions" />
+            <SectionHeader icon={<DimensionsIcon />} title={t('productDimensions')} />
             
             <Grid container spacing={3}>
               <Grid item xs={6}>
                 <DimensionInput
-                  label="Short Edge"
+                  label={t('shortEdge')}
                   value={inputs.shortEdge}
                   name="shortEdge"
                   min={10}
                   max={305}
-                  helperText="Range: 10-305mm"
+                  helperText={`${t('range')}: 10-305mm`}
                 />
               </Grid>
               <Grid item xs={6}>
                 <DimensionInput
-                  label="Long Edge"
+                  label={t('longEdge')}
                   value={inputs.longEdge}
                   name="longEdge"
                   min={10}
                   max={458}
-                  helperText="Range: 10-458mm"
+                  helperText={`${t('range')}: 10-458mm`}
                 />
               </Grid>
             </Grid>
@@ -512,12 +514,12 @@ const InputPanel = ({ inputs, onInputChange }) => {
           }}
         >
           <CardContent sx={{ px: 3, py: 2.5 }}>
-            <SectionHeader icon={<PriceIcon />} title="Price Parameters" />
+            <SectionHeader icon={<PriceIcon />} title={t('priceParameters')} />
             
             <Grid container spacing={2}>
               <Grid item xs={12}>
                 <StepperInput
-                  label="Sales Price per Unit (JPY)"
+                  label={`${t('salesPricePerUnit')} (${t('currency')})`}
                   value={inputs.salesPricePerUnit}
                   name="salesPricePerUnit"
                   min={0}
@@ -526,7 +528,7 @@ const InputPanel = ({ inputs, onInputChange }) => {
               </Grid>
               <Grid item xs={12}>
                 <StepperInput
-                  label="Material Cost per Unit (JPY)"
+                  label={`${t('materialCostPerUnit')} (${t('currency')})`}
                   value={inputs.materialCostPerUnit}
                   name="materialCostPerUnit"
                   min={0}
@@ -535,7 +537,7 @@ const InputPanel = ({ inputs, onInputChange }) => {
               </Grid>
               <Grid item xs={12}>
                 <StepperInput
-                  label="Labor Cost per Hour (JPY)"
+                  label={`${t('laborCostPerHour')} (${t('currency')})`}
                   value={inputs.laborCostPerHour}
                   name="laborCostPerHour"
                   min={0}
@@ -544,7 +546,7 @@ const InputPanel = ({ inputs, onInputChange }) => {
               </Grid>
               <Grid item xs={12}>
                 <StepperInput
-                  label="Ink Price (JPY/cc)"
+                  label={`${t('inkPrice')} (${t('currency')}/${t('cc')})`}
                   value={inputs.inkPricePerCC}
                   name="inkPricePerCC"
                   min={0}
@@ -572,10 +574,10 @@ const InputPanel = ({ inputs, onInputChange }) => {
           }}
         >
           <CardContent sx={{ px: 3, py: 2.5 }}>
-            <SectionHeader icon={<VolumeIcon />} title="Monthly Sales Volume" />
+            <SectionHeader icon={<VolumeIcon />} title={t('monthlySalesVolume')} />
             
-            <Box sx={{ px: 1 }}>
-              <Grid container spacing={2} alignItems="center">
+            <Box sx={{ px: 2, mt: 2 }}>
+              <Grid container spacing={3} alignItems="center">
                 <Grid item xs={8}>
                   <Slider
                     value={inputs.monthlySalesVolume}
@@ -586,25 +588,49 @@ const InputPanel = ({ inputs, onInputChange }) => {
                     color="primary"
                     valueLabelDisplay="auto"
                     sx={{
-                      height: 8,
+                      height: 4,
+                      padding: '15px 0',
+                      '& .MuiSlider-rail': {
+                        opacity: 0.5,
+                        backgroundColor: '#e0e0e0',
+                        height: 4,
+                      },
                       '& .MuiSlider-track': {
+                        height: 4,
                         border: 'none',
+                        backgroundColor: '#2471CC',
                       },
                       '& .MuiSlider-thumb': {
-                        transition: 'transform 0.2s ease, box-shadow 0.2s ease',
-                        '&:hover': {
-                          boxShadow: `0 0 0 8px ${theme.palette.primary.light}30`,
+                        height: 20,
+                        width: 20,
+                        backgroundColor: '#fff',
+                        border: `2px solid #2471CC`,
+                        boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                        '&:focus, &:hover, &.Mui-active': {
+                          boxShadow: `0 0 0 8px rgba(36, 113, 204, 0.2)`,
                         },
-                        '&.Mui-active': {
-                          boxShadow: `0 0 0 12px ${theme.palette.primary.light}30`,
-                        }
+                        '&:before': {
+                          display: 'none',
+                        },
                       },
                       '& .MuiSlider-valueLabel': {
-                        backgroundColor: theme.palette.primary.main,
-                        borderRadius: '8px',
-                        padding: '4px 8px',
-                        fontWeight: 600,
-                        color: theme.palette.primary.contrastText
+                        lineHeight: 1.2,
+                        fontSize: 12,
+                        background: 'unset',
+                        padding: 0,
+                        width: 32,
+                        height: 32,
+                        borderRadius: '50% 50% 50% 0',
+                        backgroundColor: '#2471CC',
+                        transformOrigin: 'bottom left',
+                        transform: 'translate(50%, -100%) rotate(-45deg) scale(0)',
+                        '&:before': { display: 'none' },
+                        '&.MuiSlider-valueLabelOpen': {
+                          transform: 'translate(50%, -100%) rotate(-45deg) scale(1)',
+                        },
+                        '& > *': {
+                          transform: 'rotate(45deg)',
+                        },
                       },
                     }}
                   />
@@ -618,7 +644,7 @@ const InputPanel = ({ inputs, onInputChange }) => {
                     inputProps={{ 
                       min: 0, 
                       max: 1000,
-                      style: { textAlign: 'center' }
+                      style: { textAlign: 'center', fontWeight: '500', fontSize: '1.1rem' }
                     }}
                     type="number"
                     size="small"
@@ -627,7 +653,9 @@ const InputPanel = ({ inputs, onInputChange }) => {
                     sx={{
                       '& .MuiOutlinedInput-root': {
                         fontWeight: 500,
-                        borderRadius: 2, // Rounded corners matching the design
+                        borderRadius: '12px', // Rounded corners matching the design
+                        height: '48px',
+                        backgroundColor: '#fff',
                         transition: 'all 0.2s ease-in-out',
                         '& .MuiOutlinedInput-notchedOutline': {
                           borderColor: 'rgba(0, 0, 0, 0.15)', // Lighter border as in the design
@@ -651,8 +679,8 @@ const InputPanel = ({ inputs, onInputChange }) => {
                   />
                 </Grid>
               </Grid>
-              <Typography variant="body2" color="text.secondary" sx={{ mt: 1, fontWeight: 500 }}>
-                Units per month (0-1000)
+              <Typography variant="body2" color="text.secondary" sx={{ mt: 2, ml: 2, fontWeight: 500 }}>
+                {t('unitsPerMonth')} (0-1000)
               </Typography>
             </Box>
           </CardContent>

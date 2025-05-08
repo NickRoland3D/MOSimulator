@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { Box, Typography } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
+import { useLanguage } from '../../context/LanguageContext';
 
 /**
  * CostBreakdownChart Component
@@ -8,6 +9,7 @@ import { useTheme } from '@mui/material/styles';
  */
 const CostBreakdownChart = ({ materialCost, inkCost, laborCost }) => {
   const theme = useTheme();
+  const { t } = useLanguage(); // Get translation function
   const canvasRef = useRef(null);
   
   // Calculate total cost and percentages
@@ -17,7 +19,7 @@ const CostBreakdownChart = ({ materialCost, inkCost, laborCost }) => {
   const laborPercentage = (laborCost / totalCost) * 100;
   
   // Format currency with thousands separators
-  const formatCurrency = (amount) => `JPY ${Math.round(amount).toLocaleString()}`;
+  const formatCurrency = (amount) => `${t('currency')} ${Math.round(amount).toLocaleString()}`;
   
   // CMYK-inspired colors for the chart segments as specified in PRD
   const colors = {
@@ -94,7 +96,7 @@ const CostBreakdownChart = ({ materialCost, inkCost, laborCost }) => {
     
     ctx.font = '12px ' + theme.typography.fontFamily;
     ctx.fillStyle = theme.palette.text.secondary;
-    ctx.fillText('Total Cost per Unit', centerX, centerY + 15);
+    ctx.fillText(t('totalCostPerUnit'), centerX, centerY + 15);
     
     // Add 3D effect to segments (subtle shadow)
     ctx.shadowColor = 'rgba(0, 0, 0, 0.2)';
@@ -123,7 +125,7 @@ const CostBreakdownChart = ({ materialCost, inkCost, laborCost }) => {
   return (
     <Box sx={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
       <Typography variant="h6" align="center" gutterBottom>
-        Cost Breakdown per Unit
+        {t('costBreakdownPerUnit')}
       </Typography>
       
       {/* Canvas for donut chart */}
@@ -143,7 +145,7 @@ const CostBreakdownChart = ({ materialCost, inkCost, laborCost }) => {
             boxShadow: '0 1px 3px rgba(0, 0, 0, 0.12)'
           }} />
           <Typography variant="body2" fontWeight={500}>
-            Material: {formatCurrency(materialCost)} ({Math.round(materialPercentage)}%)
+            {t('material')}: {formatCurrency(materialCost)} ({Math.round(materialPercentage)}%)
           </Typography>
         </Box>
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
@@ -156,7 +158,7 @@ const CostBreakdownChart = ({ materialCost, inkCost, laborCost }) => {
             boxShadow: '0 1px 3px rgba(0, 0, 0, 0.12)'
           }} />
           <Typography variant="body2" fontWeight={500}>
-            Ink: {formatCurrency(inkCost)} ({Math.round(inkPercentage)}%)
+            {t('ink')}: {formatCurrency(inkCost)} ({Math.round(inkPercentage)}%)
           </Typography>
         </Box>
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
@@ -169,7 +171,7 @@ const CostBreakdownChart = ({ materialCost, inkCost, laborCost }) => {
             boxShadow: '0 1px 3px rgba(0, 0, 0, 0.12)'
           }} />
           <Typography variant="body2" fontWeight={500}>
-            Labor: {formatCurrency(laborCost)} ({Math.round(laborPercentage)}%)
+            {t('labor')}: {formatCurrency(laborCost)} ({Math.round(laborPercentage)}%)
           </Typography>
         </Box>
       </Box>

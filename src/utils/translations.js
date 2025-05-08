@@ -1,0 +1,151 @@
+// Translation strings for English and Japanese
+const translations = {
+  en: {
+    // App title and subtitle
+    moSimulatorTitle: "MO-180 Cost Simulator",
+    evaluateProfitability: "Evaluate profitability and ROI for the Roland DG MO-180 UV printer",
+    allRightsReserved: "All rights reserved.",
+    
+    // Header
+    simulationParameters: "Simulation Parameters",
+    printerSpecifications: "Printer Specifications",
+    
+    // Dimensions section
+    productDimensions: "Product Dimensions",
+    shortEdge: "Short Edge",
+    longEdge: "Long Edge",
+    range: "Range",
+    
+    // Price section
+    priceParameters: "Price Parameters",
+    salesPricePerUnit: "Sales Price per Unit",
+    materialCostPerUnit: "Material Cost per Unit",
+    laborCostPerHour: "Labor Cost per Hour",
+    inkPrice: "Ink Price",
+    
+    // Volume section
+    monthlySalesVolume: "Monthly Sales Volume",
+    unitsPerMonth: "Units per month",
+
+    // Results section
+    simulationResults: "Simulation Results",
+    monthlySales: "Monthly Sales",
+    monthlyGrossProfit: "Monthly Gross Profit",
+    grossProfitMargin: "Gross Profit Margin",
+    investmentPaybackPeriod: "Investment Payback Period",
+    costPerUnit: "Cost per Unit",
+    operatingHours: "Operating Hours",
+    hours: "hours",
+    months: "months",
+    productionDetails: "Production Details",
+    itemsPerPrintJob: "Items per Print Job",
+    monthlyPrintJobs: "Monthly Print Jobs",
+    inkUsagePerItem: "Ink Usage per Item",
+    white: "White",
+    cmyk: "CMYK",
+    primer: "Primer",
+    inkCostPerUnit: "Ink Cost per Unit",
+    downloadPDF: "DOWNLOAD PDF",
+    
+    // Chart tabs
+    payback: "Payback",
+    cost: "Cost",
+    profit: "Profit",
+    
+    // Status messages
+    excellentInvestment: "Excellent Investment",
+    goodInvestment: "Good Investment",
+    considerCarefully: "Consider Carefully",
+    notProfitable: "Not Profitable",
+    excellentPaybackPeriod: "Excellent payback period",
+    goodPaybackPeriod: "Good payback period",
+    extendedPaybackPeriod: "Extended payback period",
+    noProfitWithCurrentParameters: "No profit with current parameters",
+    totalCostPerUnit: "Total Cost per Unit",
+    costBreakdownPerUnit: "Cost Breakdown per Unit",
+    material: "Material",
+    ink: "Ink",
+    labor: "Labor",
+    
+    // Units
+    currency: "JPY",
+    cc: "cc",
+    units: "units",
+    jobs: "jobs"
+  },
+  ja: {
+    // App title and subtitle
+    moSimulatorTitle: "MO-180 コストシミュレーター",
+    evaluateProfitability: "Roland DG MO-180 UVプリンターの収益性とROIを評価",
+    allRightsReserved: "無断複写・転載を禁じます",
+    
+    // Header
+    simulationParameters: "シミュレーションパラメータ",
+    printerSpecifications: "プリンター仕様",
+    
+    // Dimensions section
+    productDimensions: "製品寸法",
+    shortEdge: "短辺",
+    longEdge: "長辺",
+    range: "範囲",
+    
+    // Price section
+    priceParameters: "価格パラメータ",
+    salesPricePerUnit: "ユニット当たりの販売価格",
+    materialCostPerUnit: "ユニット当たりの材料費",
+    laborCostPerHour: "時間当たりの人件費",
+    inkPrice: "インク価格",
+    
+    // Volume section
+    monthlySalesVolume: "月間販売量",
+    unitsPerMonth: "月当たりのユニット数",
+
+    // Results section
+    simulationResults: "シミュレーション結果",
+    monthlySales: "月間売上",
+    monthlyGrossProfit: "月間粗利益",
+    grossProfitMargin: "粗利益率",
+    investmentPaybackPeriod: "投資回収期間",
+    costPerUnit: "ユニット当たりのコスト",
+    operatingHours: "稼働時間",
+    hours: "時間",
+    months: "ヶ月",
+    productionDetails: "生産詳細",
+    itemsPerPrintJob: "印刷ジョブあたりのアイテム",
+    monthlyPrintJobs: "月間印刷ジョブ",
+    inkUsagePerItem: "アイテム当たりのインク使用量",
+    white: "ホワイト",
+    cmyk: "CMYK",
+    primer: "プライマー",
+    inkCostPerUnit: "ユニット当たりのインクコスト",
+    downloadPDF: "PDFをダウンロード",
+    
+    // Chart tabs
+    payback: "回収期間",
+    cost: "コスト",
+    profit: "利益",
+    
+    // Status messages
+    excellentInvestment: "優れた投資",
+    goodInvestment: "良い投資",
+    considerCarefully: "慎重に検討",
+    notProfitable: "収益性なし",
+    excellentPaybackPeriod: "優れた回収期間",
+    goodPaybackPeriod: "良好な回収期間",
+    extendedPaybackPeriod: "長い回収期間",
+    noProfitWithCurrentParameters: "現在のパラメータでは利益なし",
+    totalCostPerUnit: "ユニット当たりの総コスト",
+    costBreakdownPerUnit: "ユニット当たりのコスト内訳",
+    material: "材料",
+    ink: "インク",
+    labor: "人件費",
+    
+    // Units
+    currency: "円",
+    cc: "cc",
+    units: "ユニット",
+    jobs: "ジョブ"
+  }
+};
+
+export default translations;

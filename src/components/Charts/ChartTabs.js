@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Box, Tabs, Tab, Fade } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
+import { useLanguage } from '../../context/LanguageContext';
 import PaybackGauge from './PaybackGauge';
 import CostBreakdownChart from './CostBreakdownChart';
 import ProfitVolumeChart from './ProfitVolumeChart';
@@ -40,6 +41,7 @@ const a11yProps = (index) => {
  */
 const ChartTabs = ({ results }) => {
   const theme = useTheme();
+  const { t } = useLanguage(); // Get translation function
   const [value, setValue] = useState(0);
 
   // Handle tab change
@@ -72,7 +74,7 @@ const ChartTabs = ({ results }) => {
           }}
         >
           <Tab 
-            label="Payback" 
+            label={t('payback')} 
             {...a11yProps(0)} 
             sx={{ 
               color: value === 0 ? tabColors[0] : 'text.secondary',
@@ -86,7 +88,7 @@ const ChartTabs = ({ results }) => {
             }}
           />
           <Tab 
-            label="Cost" 
+            label={t('cost')} 
             {...a11yProps(1)} 
             sx={{ 
               color: value === 1 ? tabColors[1] : 'text.secondary',
@@ -100,7 +102,7 @@ const ChartTabs = ({ results }) => {
             }}
           />
           <Tab 
-            label="Profit" 
+            label={t('profit')} 
             {...a11yProps(2)} 
             sx={{ 
               color: value === 2 ? tabColors[2] : 'text.secondary',
