@@ -7,7 +7,6 @@ import { useTheme } from '@mui/material/styles';
  * Modern minimal gauge with rounded lines and pastel colors
  */
 const PaybackGauge = ({ paybackPeriod }) => {
-  const theme = useTheme();
   const canvasRef = useRef(null);
   
   // Handle "no profit" case
@@ -138,7 +137,7 @@ const PaybackGauge = ({ paybackPeriod }) => {
     ctx.fill();
     ctx.stroke();
     
-  }, [paybackPeriod, noProfitCase, colors]);
+  }, [paybackPeriod, noProfitCase, colors, getValueColor]);
   
   return (
     <Box sx={{ 

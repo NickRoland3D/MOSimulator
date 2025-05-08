@@ -118,7 +118,7 @@ const CostBreakdownChart = ({ materialCost, inkCost, laborCost }) => {
     ctx.globalAlpha = 1;
     ctx.shadowColor = 'transparent';
     
-  }, [materialCost, inkCost, laborCost, theme]);
+  }, [materialCost, inkCost, laborCost, theme, materialPercentage, inkPercentage, laborPercentage, colors.material, colors.ink, colors.labor]);
   
   return (
     <Box sx={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>

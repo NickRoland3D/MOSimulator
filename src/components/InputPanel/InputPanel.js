@@ -6,7 +6,6 @@ import {
   Slider, 
   Grid,
   InputAdornment,
-  IconButton,
   Card,
   CardContent,
   Tooltip,

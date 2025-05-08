@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Box, Tabs, Tab, Typography, Fade } from '@mui/material';
+import { Box, Tabs, Tab, Fade } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import PaybackGauge from './PaybackGauge';
 import CostBreakdownChart from './CostBreakdownChart';
