@@ -25,6 +25,7 @@ const translations = {
     
     // Volume section
     monthlySalesVolume: "Monthly Sales Volume",
+    monthlySalesTarget: "Monthly Sales Target",
     unitsPerMonth: "Units per month",
 
     // Results section
@@ -71,7 +72,21 @@ const translations = {
     currency: "JPY",
     cc: "cc",
     units: "units",
-    jobs: "jobs"
+    jobs: "jobs",
+    
+    // Printer info popover
+    printerSpecifications: "MO-180 Printer Specifications",
+    baseParameters: "Base Parameters",
+    initialInvestment: "Initial Investment",
+    printSpeed: "Print Speed",
+    printableArea: "Printable Area",
+    inkUsageReferenceData: "Ink Usage Reference Data",
+    shortEdgeHeader: "Short Edge (mm)",
+    whiteInk: "White (cc)",
+    cmykInk: "CMYK (cc)",
+    primerInk: "Primer (cc)",
+    inkUsageFormula: "Ink usage is calculated using a scaling formula: scale = (Short_Edge / 65)²",
+    printsPerHour: "prints/hour"
   },
   ja: {
     // App title and subtitle
@@ -91,14 +106,15 @@ const translations = {
     
     // Price section
     priceParameters: "価格パラメータ",
-    salesPricePerUnit: "ユニット当たりの販売価格",
-    materialCostPerUnit: "ユニット当たりの材料費",
-    laborCostPerHour: "時間当たりの人件費",
+    salesPricePerUnit: "販売単価/個",
+    materialCostPerUnit: "材料費原価/個",
+    laborCostPerHour: "人件費/時",
     inkPrice: "インク価格",
     
     // Volume section
     monthlySalesVolume: "月間販売量",
-    unitsPerMonth: "月当たりのユニット数",
+    monthlySalesTarget: "月間販売目標",
+    unitsPerMonth: "月間販売数量",
 
     // Results section
     simulationResults: "シミュレーション結果",
@@ -111,8 +127,8 @@ const translations = {
     hours: "時間",
     months: "ヶ月",
     productionDetails: "生産詳細",
-    itemsPerPrintJob: "印刷ジョブあたりのアイテム",
-    monthlyPrintJobs: "月間印刷ジョブ",
+    itemsPerPrintJob: "盤面に置ける材料の個数",
+    monthlyPrintJobs: "印刷回数",
     inkUsagePerItem: "アイテム当たりのインク使用量",
     white: "ホワイト",
     cmyk: "CMYK",
@@ -143,8 +159,22 @@ const translations = {
     // Units
     currency: "円",
     cc: "cc",
-    units: "ユニット",
-    jobs: "ジョブ"
+    units: "個",
+    jobs: "回",
+    
+    // Printer info popover
+    printerSpecifications: "MO-180 プリンター仕様",
+    baseParameters: "基本パラメータ",
+    initialInvestment: "初期投資",
+    printSpeed: "印刷速度",
+    printableArea: "印刷領域",
+    inkUsageReferenceData: "インク使用量参考データ",
+    shortEdgeHeader: "短辺 (mm)",
+    whiteInk: "ホワイト (cc)",
+    cmykInk: "CMYK (cc)",
+    primerInk: "プライマー (cc)",
+    inkUsageFormula: "インク使用量は次の計算式で算出されます：倍率 = (短辺 / 65)²",
+    printsPerHour: "回/時間"
   }
 };
 

@@ -20,7 +20,7 @@ import ChartTabs from '../Charts/ChartTabs';
  */
 const ResultsPanel = ({ results }) => {
   const theme = useTheme();
-  const { t } = useLanguage(); // Get translation function
+  const { t, language } = useLanguage(); // Get translation function and current language
   
   // Helper function to format numbers with commas as thousands separators
   const formatNumber = (num, decimals = 0) => {
@@ -33,6 +33,14 @@ const ResultsPanel = ({ results }) => {
 
   // Helper function to format currency
   const formatCurrency = (amount) => {
+    // Get the current language
+    const currentLang = language;
+    
+    // Place the currency symbol after the number for Japanese
+    if (currentLang === 'ja') {
+      return `${formatNumber(Math.round(amount))}${t('currency')}`;
+    }
+    // Default format for other languages
     return `${t('currency')} ${formatNumber(Math.round(amount))}`;
   };
 

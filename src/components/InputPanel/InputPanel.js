@@ -498,7 +498,7 @@ const InputPanel = ({ inputs, onInputChange }) => {
         </Card>
       </Fade>
 
-      {/* Price Inputs */}
+      {/* Sales Volume Slider */}
       <Fade in={true} timeout={600}>
         <Card 
           sx={{ 
@@ -514,67 +514,7 @@ const InputPanel = ({ inputs, onInputChange }) => {
           }}
         >
           <CardContent sx={{ px: 3, py: 2.5 }}>
-            <SectionHeader icon={<PriceIcon />} title={t('priceParameters')} />
-            
-            <Grid container spacing={2}>
-              <Grid item xs={12}>
-                <StepperInput
-                  label={`${t('salesPricePerUnit')} (${t('currency')})`}
-                  value={inputs.salesPricePerUnit}
-                  name="salesPricePerUnit"
-                  min={0}
-                  step={50}
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <StepperInput
-                  label={`${t('materialCostPerUnit')} (${t('currency')})`}
-                  value={inputs.materialCostPerUnit}
-                  name="materialCostPerUnit"
-                  min={0}
-                  step={10}
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <StepperInput
-                  label={`${t('laborCostPerHour')} (${t('currency')})`}
-                  value={inputs.laborCostPerHour}
-                  name="laborCostPerHour"
-                  min={0}
-                  step={100}
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <StepperInput
-                  label={`${t('inkPrice')} (${t('currency')}/${t('cc')})`}
-                  value={inputs.inkPricePerCC}
-                  name="inkPricePerCC"
-                  min={0}
-                  step={1}
-                />
-              </Grid>
-            </Grid>
-          </CardContent>
-        </Card>
-      </Fade>
-
-      {/* Sales Volume Slider */}
-      <Fade in={true} timeout={700}>
-        <Card 
-          sx={{ 
-            mb: 3, 
-            overflow: 'visible',
-            borderRadius: 3, // Rounded corners matching the design
-            boxShadow: '0 2px 6px rgba(0, 0, 0, 0.08)', // Subtle shadow as in the design
-            transition: 'transform 0.3s ease, box-shadow 0.3s ease',
-            '&:hover': {
-              transform: 'translateY(-2px)',
-              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)'
-            }
-          }}
-        >
-          <CardContent sx={{ px: 3, py: 2.5 }}>
-            <SectionHeader icon={<VolumeIcon />} title={t('monthlySalesVolume')} />
+            <SectionHeader icon={<VolumeIcon />} title={t('monthlySalesTarget')} />
             
             <Box sx={{ px: 2, mt: 2 }}>
               <Grid container spacing={3} alignItems="center">
@@ -679,10 +619,73 @@ const InputPanel = ({ inputs, onInputChange }) => {
                   />
                 </Grid>
               </Grid>
-              <Typography variant="body2" color="text.secondary" sx={{ mt: 2, ml: 2, fontWeight: 500 }}>
+              <Typography variant="body2" color="text.secondary" sx={{ mt: 1, textAlign: 'center', fontWeight: 500, mb: 2 }}>
                 {t('unitsPerMonth')} (0-1000)
               </Typography>
+              
+              <Grid container spacing={3}>
+                <Grid item xs={12}>
+                  <StepperInput
+                    label={`${t('salesPricePerUnit')} (${t('currency')})`}
+                    value={inputs.salesPricePerUnit}
+                    name="salesPricePerUnit"
+                    min={0}
+                    step={50}
+                  />
+                </Grid>
+              </Grid>
             </Box>
+          </CardContent>
+        </Card>
+      </Fade>
+
+      {/* Price Inputs */}
+      <Fade in={true} timeout={700}>
+        <Card 
+          sx={{ 
+            mb: 3, 
+            overflow: 'visible',
+            borderRadius: 3, // Rounded corners matching the design
+            boxShadow: '0 2px 6px rgba(0, 0, 0, 0.08)', // Subtle shadow as in the design
+            transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+            '&:hover': {
+              transform: 'translateY(-2px)',
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)'
+            }
+          }}
+        >
+          <CardContent sx={{ px: 3, py: 2.5 }}>
+            <SectionHeader icon={<PriceIcon />} title={t('priceParameters')} />
+            
+            <Grid container spacing={2}>
+              <Grid item xs={12}>
+                <StepperInput
+                  label={`${t('materialCostPerUnit')} (${t('currency')})`}
+                  value={inputs.materialCostPerUnit}
+                  name="materialCostPerUnit"
+                  min={0}
+                  step={10}
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <StepperInput
+                  label={`${t('laborCostPerHour')} (${t('currency')})`}
+                  value={inputs.laborCostPerHour}
+                  name="laborCostPerHour"
+                  min={0}
+                  step={100}
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <StepperInput
+                  label={`${t('inkPrice')} (${t('currency')}/${t('cc')})`}
+                  value={inputs.inkPricePerCC}
+                  name="inkPricePerCC"
+                  min={0}
+                  step={1}
+                />
+              </Grid>
+            </Grid>
           </CardContent>
         </Card>
       </Fade>
