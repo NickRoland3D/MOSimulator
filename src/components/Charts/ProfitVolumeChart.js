@@ -1,247 +1,398 @@
-import React, { useEffect, useRef } from 'react';
-import { Box, Typography } from '@mui/material';
+import React, { useEffect, useRef, useCallback } from 'react';
+import { Box } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
+import { useLanguage } from '../../context/LanguageContext';
 
-/**
- * ProfitVolumeChart Component
- * Displays a line chart showing profit vs sales volume with grid layout
- * Updated to match the reference screenshot
- */
 const ProfitVolumeChart = ({ salesPricePerUnit, costPerUnit, currentVolume }) => {
   const theme = useTheme();
+  const { t, language } = useLanguage();
   const canvasRef = useRef(null);
-  
-  // Calculate profit per unit
+  const chartInstanceRef = useRef({ 
+    ctx: null, 
+    width: 0, 
+    height: 0, 
+    // Increased left padding for Y-axis labels to fix overlap issue
+    padding: { left: 100, right: 30, top: 60, bottom: 70 }, 
+    maxVolume: 1000,
+    niceMaxProfit: 0,
+    yStep: 0,
+    profitPerUnit: 0,
+    currentHoverData: null // To store data for the current hover position
+  });
+
   const profitPerUnit = salesPricePerUnit - costPerUnit;
-  
-  // Format currency with thousands separators and K/M suffixes
-  const formatCurrency = (amount, short = false) => {
+  chartInstanceRef.current.profitPerUnit = profitPerUnit; // Store for use in draw functions
+
+  const formatCurrency = useCallback((amount, short = false) => {
+    if (typeof amount !== 'number' || isNaN(amount)) return 'N/A';
+    const currencySymbol = t('currency');
+    
     if (short) {
-      if (amount >= 1000000) {
-        return `${(amount / 1000000).toFixed(1)}M JPY`;
-      } else if (amount >= 1000) {
-        return `${(amount / 1000).toFixed(1)}K JPY`;
+      if (Math.abs(amount) >= 1000000) {
+        const value = (amount / 1000000).toFixed(1);
+        return language === 'ja' ? `${value}百万${currencySymbol}` : `${value}M ${currencySymbol}`;
+      } else if (Math.abs(amount) >= 1000) {
+        const value = (amount / 1000).toFixed(0); // No decimal for K to avoid clutter
+        return language === 'ja' ? `${value}千${currencySymbol}` : `${value}K ${currencySymbol}`;
       }
-      return `${Math.round(amount)} JPY`;
+      return language === 'ja' ? `${Math.round(amount)}${currencySymbol}` : `${Math.round(amount)} ${currencySymbol}`;
     }
-    return `${Math.round(amount).toLocaleString()} JPY`;
+    return language === 'ja' ? `${Math.round(amount).toLocaleString('ja-JP')}${currencySymbol}` : `${currencySymbol}${Math.round(amount).toLocaleString('en-US')}`;
+  }, [t, language]);
+
+  const calculateNiceStep = (maxValue, targetSteps = 5) => {
+    if (maxValue <= 0) return 10000; // Default step if no profit or negative
+    const rawStep = maxValue / targetSteps;
+    const magnitude = Math.pow(10, Math.floor(Math.log10(rawStep)));
+    const mantissa = rawStep / magnitude;
+    let niceStep;
+    if (mantissa < 1.5) niceStep = 1;
+    else if (mantissa < 3) niceStep = 2;
+    else if (mantissa < 7) niceStep = 5;
+    else niceStep = 10;
+    return Math.max(1, niceStep * magnitude); // Ensure step is at least 1
   };
-  
-  // Draw the line chart
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas || !salesPricePerUnit || !costPerUnit) return;
-    
-    const ctx = canvas.getContext('2d');
-    const width = canvas.width;
-    const height = canvas.height;
-    const padding = { left: 80, right: 20, top: 40, bottom: 60 };
-    
-    // Clear canvas
-    ctx.clearRect(0, 0, width, height);
-    
-    // Chart area dimensions
-    const chartWidth = width - padding.left - padding.right;
-    const chartHeight = height - padding.top - padding.bottom;
-    
-    // X-axis: Sales Volume (0-1000)
-    const maxVolume = 1000;
-    
-    // Y-axis: Monthly Profit (0 to max value based on volume and profit per unit)
-    const maxProfit = maxVolume * profitPerUnit;
-    
-    // Function to convert data points to canvas coordinates
-    const toCanvasX = (volume) => padding.left + (volume / maxVolume) * chartWidth;
-    const toCanvasY = (profit) => height - padding.bottom - (profit / maxProfit) * chartHeight;
-    
-    // Draw the light green background
-    ctx.fillStyle = '#f2f7f2'; // Light green background like in reference
+
+  const toCanvasX = useCallback((volume) => {
+    const chart = chartInstanceRef.current;
+    return chart.padding.left + (volume / chart.maxVolume) * (chart.width - chart.padding.left - chart.padding.right);
+  }, []);
+
+  const toCanvasY = useCallback((profit) => {
+    const chart = chartInstanceRef.current;
+    // Handle case where niceMaxProfit might be 0 or negative
+    const effectiveMaxProfit = chart.niceMaxProfit <= 0 ? 1 : chart.niceMaxProfit;
+    const chartHeight = chart.height - chart.padding.top - chart.padding.bottom;
+    // Adjust for Y-axis starting at 0 or a negative value
+    const zeroY = chart.niceMinProfit >= 0 ? 0 : chart.niceMinProfit;
+    const totalYRange = effectiveMaxProfit - zeroY;
+    if (totalYRange <= 0) return chart.height - chart.padding.bottom; // Avoid division by zero
+
+    return chart.height - chart.padding.bottom - ((profit - zeroY) / totalYRange) * chartHeight;
+  }, []);
+
+
+  // --- Drawing Functions ---
+  const drawBackground = useCallback(() => {
+    const chart = chartInstanceRef.current;
+    const { ctx, width, height } = chart;
+    ctx.fillStyle = '#f7f9f7'; // Very light green/grayish background
     ctx.fillRect(0, 0, width, height);
     
-    // Draw grid
+    // Draw chart title at the top
+    ctx.font = 'bold 14px sans-serif';
+    ctx.fillStyle = '#333333';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    const chartTitle = language === 'ja' ? '利益と販売量の関係' : 'Profit vs. Sales Volume';
+    ctx.fillText(chartTitle, width / 2, 20);
+  }, [language]);
+
+  const drawGridAndAxes = useCallback(() => {
+    const chart = chartInstanceRef.current;
+    const { ctx, width, height, padding, niceMaxProfit, niceMinProfit, yStep, maxVolume } = chart;
+    const chartHeight = height - padding.top - padding.bottom;
+
     ctx.beginPath();
-    ctx.strokeStyle = '#dcdcdc'; // Light gray grid lines
+    ctx.strokeStyle = '#e0e0e0';
     ctx.lineWidth = 1;
-    
-    // Draw vertical grid lines every 100 units
-    for (let i = 0; i <= 1000; i += 100) {
+
+    // Vertical grid lines
+    for (let i = 0; i <= maxVolume; i += 100) {
       const x = toCanvasX(i);
       ctx.moveTo(x, padding.top);
       ctx.lineTo(x, height - padding.bottom);
     }
-    
-    // Calculate appropriate step size for Y-axis based on maxProfit
-    let yStep;
-    let yLabelMultiplier = 1;
-    let yLabelSuffix = '';
-    
-    if (maxProfit > 2000000) {
-      yStep = 500000;
-      yLabelMultiplier = 1/1000000;
-      yLabelSuffix = 'M JPY';
-    } else if (maxProfit > 500000) {
-      yStep = 250000;
-      yLabelMultiplier = 1/1000000;
-      yLabelSuffix = 'M JPY';
-    } else {
-      yStep = 100000;
-      yLabelMultiplier = 1/1000;
-      yLabelSuffix = 'K JPY';
-    }
-    
-    // Draw horizontal grid lines
-    for (let i = 0; i <= maxProfit; i += yStep) {
+
+    // Horizontal grid lines
+    for (let i = niceMinProfit; i <= niceMaxProfit; i += yStep) {
+      // Ensure we don't draw too many lines if yStep is very small relative to range
+      if ((niceMaxProfit - niceMinProfit) / yStep > 20 && i !== 0 && i !== niceMinProfit && i !== niceMaxProfit) {
+          if (i % (yStep * 2) !== 0 && i !== 0) continue; // Skip some lines if too dense
+      }
       const y = toCanvasY(i);
       ctx.moveTo(padding.left, y);
       ctx.lineTo(width - padding.right, y);
     }
     ctx.stroke();
-    
+
     // Draw axes
     ctx.beginPath();
-    ctx.strokeStyle = '#aaaaaa'; // Darker gray for axes
-    ctx.lineWidth = 1;
-    
-    // X-axis
-    ctx.moveTo(padding.left, height - padding.bottom);
+    ctx.strokeStyle = '#aaaaaa';
+    ctx.lineWidth = 1.5;
+    ctx.moveTo(padding.left, height - padding.bottom); // X-axis
     ctx.lineTo(width - padding.right, height - padding.bottom);
-    
-    // Y-axis
-    ctx.moveTo(padding.left, padding.top);
+    ctx.moveTo(padding.left, padding.top); // Y-axis
     ctx.lineTo(padding.left, height - padding.bottom);
     ctx.stroke();
-    
-    // Draw Y-axis labels
+  }, [toCanvasX, toCanvasY]);
+
+  const drawLabelsAndTitles = useCallback(() => {
+    const chart = chartInstanceRef.current;
+    const { ctx, width, height, padding, niceMaxProfit, niceMinProfit, yStep, maxVolume } = chart;
+
+    // Y-axis labels
     ctx.textAlign = 'right';
     ctx.textBaseline = 'middle';
-    ctx.fillStyle = '#666666';
+    ctx.fillStyle = '#555555'; // Darker for better readability
     ctx.font = '11px sans-serif';
-    
-    for (let i = 0; i <= maxProfit; i += yStep) {
+
+    for (let i = niceMinProfit; i <= niceMaxProfit; i += yStep) {
+       if ((niceMaxProfit - niceMinProfit) / yStep > 20 && i !== 0 && i !== niceMinProfit && i !== niceMaxProfit) {
+          if (i % (yStep * 2) !== 0 && i !== 0) continue;
+      }
       const y = toCanvasY(i);
-      const label = `${(i * yLabelMultiplier).toFixed(1)}${yLabelSuffix}`;
-      
-      // Draw tick mark
-      ctx.beginPath();
-      ctx.moveTo(padding.left - 5, y);
-      ctx.lineTo(padding.left, y);
-      ctx.stroke();
-      
-      // Draw label
-      ctx.fillText(label, padding.left - 10, y);
+      ctx.fillText(formatCurrency(i, true), padding.left - 10, y);
     }
-    
-    // Draw X-axis labels
+
+    // X-axis labels
     ctx.textAlign = 'center';
     ctx.textBaseline = 'top';
-    
-    for (let i = 0; i <= 1000; i += 100) {
+    for (let i = 0; i <= maxVolume; i += (maxVolume >= 500 ? 100 : 50)) { // Adjust step for smaller maxVolume if needed
       const x = toCanvasX(i);
-      // Draw tick mark
-      ctx.beginPath();
-      ctx.moveTo(x, height - padding.bottom);
-      ctx.lineTo(x, height - padding.bottom + 5);
-      ctx.stroke();
-      
-      // Draw label
-      ctx.fillText(i.toString(), x, height - padding.bottom + 10);
+      ctx.fillText(i.toString(), x, height - padding.bottom + 8);
     }
-    
+
     // Axis titles
-    ctx.font = '12px sans-serif';
-    ctx.fillStyle = '#444444';
-    
-    // X-axis title
+    ctx.font = 'bold 12px sans-serif';
+    ctx.fillStyle = '#333333';
     ctx.textAlign = 'center';
-    ctx.fillText('Monthly Sales Volume (units)', width / 2, height - 15);
     
-    // Y-axis title
+    // X-axis title - Use default text if translation key fails
+    const xAxisTitle = language === 'ja' ? '月間販売量 (個)' : 'Monthly Sales Volume (units)';
+    ctx.fillText(xAxisTitle, 
+                 padding.left + (width - padding.left - padding.right) / 2, 
+                 height - padding.bottom + 30);
+
+    // Y-axis title - Use default text if translation key fails
+    const yAxisTitle = language === 'ja' ? '月間利益 (円)' : 'Monthly Profit (JPY)';
     ctx.save();
-    ctx.translate(25, height / 2);
+    // Moved position further left to avoid overlap with Y-axis labels
+    // Position at 15 pixels from the left edge of the canvas
+    ctx.translate(15, padding.top + (height - padding.top - padding.bottom) / 2);
     ctx.rotate(-Math.PI / 2);
     ctx.textAlign = 'center';
-    ctx.fillText('Monthly Profit (JPY)', 0, 0);
+    ctx.fillText(yAxisTitle, 0, 0);
     ctx.restore();
-    
-    // Draw the profit line from origin to maxVolume
+  }, [toCanvasX, toCanvasY, formatCurrency, language]);
+
+  const drawProfitLine = useCallback(() => {
+    const chart = chartInstanceRef.current;
+    const { ctx, profitPerUnit, maxVolume } = chart;
+
     ctx.beginPath();
-    ctx.strokeStyle = theme.palette.cmyk.yellow; // Yellow line
-    ctx.lineWidth = 2;
+    // Use theme color, ensure theme.palette.cmyk.yellow is defined
+    ctx.strokeStyle = theme.palette.cmyk?.yellow || '#FFD700'; 
+    ctx.lineWidth = 2.5;
     
-    // Start point at origin (0,0)
-    ctx.moveTo(toCanvasX(0), toCanvasY(0));
-    
-    // Create data points every 100 units
-    for (let volume = 100; volume <= 1000; volume += 100) {
+    ctx.moveTo(toCanvasX(0), toCanvasY(0)); // Start at 0,0
+    for (let volume = 0; volume <= maxVolume; volume += 10) { // Plot points for the line
       const profit = volume * profitPerUnit;
       ctx.lineTo(toCanvasX(volume), toCanvasY(profit));
     }
+    ctx.stroke();
+  }, [toCanvasX, toCanvasY, theme.palette.cmyk?.yellow]);
+
+  const drawTooltipAndPoint = useCallback((volume, profit) => {
+    const chart = chartInstanceRef.current;
+    const { ctx, height, padding, profitPerUnit } = chart;
+    if (!ctx) return;
+
+    const pointX = toCanvasX(volume);
+    const pointY = toCanvasY(profit);
+
+    // Dashed line
+    ctx.beginPath();
+    ctx.strokeStyle = '#888888';
+    ctx.setLineDash([3, 3]);
+    ctx.lineWidth = 1;
+    ctx.moveTo(pointX, height - padding.bottom);
+    ctx.lineTo(pointX, pointY);
+    ctx.moveTo(padding.left, pointY);
+    ctx.lineTo(pointX, pointY);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Point
+    ctx.beginPath();
+    ctx.arc(pointX, pointY, 5, 0, Math.PI * 2);
+    ctx.fillStyle = theme.palette.cmyk?.yellow || '#FFD700';
+    ctx.fill();
+    ctx.strokeStyle = '#555555';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    // Tooltip
+    const volumeLabel = language === 'ja' ? '販売量' : 'Volume';
+    const profitLabel = language === 'ja' ? '利益' : 'Profit';
+    const tooltipText = `${volumeLabel}: ${volume}, ${profitLabel}: ${formatCurrency(profit)}`;
+
+    ctx.font = 'bold 11px sans-serif';
+    const textWidth = ctx.measureText(tooltipText).width;
+    const tooltipWidth = Math.max(textWidth) + 20;
+    const tooltipHeight = 30; // For one line of text
     
-    // Stroke the line
+    let tooltipX = pointX + 15;
+    let tooltipY = pointY - 15 - tooltipHeight;
+
+    // Adjust tooltip position to stay within canvas
+    if (tooltipX + tooltipWidth > chart.width - chart.padding.right) {
+      tooltipX = pointX - 15 - tooltipWidth;
+    }
+    if (tooltipY < chart.padding.top) {
+      tooltipY = pointY + 15;
+    }
+
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+    ctx.strokeStyle = 'rgba(100, 100, 100, 0.7)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.roundRect(tooltipX, tooltipY, tooltipWidth, tooltipHeight, 5); // Using roundRect
+    ctx.fill();
     ctx.stroke();
     
-    // Mark current volume point
-    if (currentVolume) {
-      const pointX = toCanvasX(currentVolume);
-      const pointY = toCanvasY(currentVolume * profitPerUnit);
-      
-      // Calculate tooltip position (placing it above the point)
-      const tooltipX = pointX;
-      const tooltipY = pointY - 40; // Position above the point
-      
-      // Draw vertical line to the current point
-      ctx.beginPath();
-      ctx.strokeStyle = '#999999';
-      ctx.setLineDash([4, 4]);
-      ctx.lineWidth = 1;
-      ctx.moveTo(pointX, height - padding.bottom);
-      ctx.lineTo(pointX, pointY);
-      ctx.stroke();
-      
-      // Reset dash
-      ctx.setLineDash([]);
-      
-      // Draw the point
-      ctx.beginPath();
-      ctx.arc(pointX, pointY, 6, 0, Math.PI * 2);
-      ctx.fillStyle = '#666666';
-      ctx.fill();
-      
-      // Draw tooltip background
-      const tooltipWidth = 180;
-      const tooltipHeight = 40;
-      const tooltipLeft = Math.min(Math.max(tooltipX - tooltipWidth / 2, padding.left), width - padding.right - tooltipWidth); // Ensure stays within chart area
-      
-      ctx.fillStyle = 'rgba(80, 80, 80, 0.8)';
-      ctx.fillRect(tooltipLeft, tooltipY - tooltipHeight / 2, tooltipWidth, tooltipHeight);
-      
-      // Draw tooltip text
-      const tooltipText = `Volume: ${currentVolume}, Profit: ${formatCurrency(currentVolume * profitPerUnit)}`;
-      ctx.fillStyle = '#ffffff';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.font = 'bold 12px sans-serif';
-      ctx.fillText(tooltipText, tooltipLeft + tooltipWidth / 2, tooltipY);
+    ctx.fillStyle = '#333333';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(tooltipText, tooltipX + 10, tooltipY + tooltipHeight / 2);
+
+  }, [toCanvasX, toCanvasY, formatCurrency, theme.palette.cmyk?.yellow, language]);
+
+
+  // Main drawing effect
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas || typeof salesPricePerUnit !== 'number' || typeof costPerUnit !== 'number') {
+      // Clear canvas if data is invalid or not present
+      if(canvas) {
+        const context = canvas.getContext('2d');
+        context.clearRect(0, 0, canvas.width, canvas.height);
+      }
+      return;
     }
     
-  }, [salesPricePerUnit, costPerUnit, currentVolume, profitPerUnit, theme]);
+    const chart = chartInstanceRef.current;
+    chart.ctx = canvas.getContext('2d');
+    chart.width = canvas.width;
+    chart.height = canvas.height;
+    chart.profitPerUnit = salesPricePerUnit - costPerUnit;
+
+    // Calculate Y-axis scale
+    const maxPossibleProfit = chart.maxVolume * chart.profitPerUnit;
+    const minPossibleProfit = 0 * chart.profitPerUnit; // Could be negative if profitPerUnit is negative
+
+    if (chart.profitPerUnit > 0) {
+        chart.niceMinProfit = 0;
+        chart.niceMaxProfit = Math.ceil((maxPossibleProfit * 1.1) / calculateNiceStep(maxPossibleProfit * 1.1)) * calculateNiceStep(maxPossibleProfit * 1.1);
+        if (chart.niceMaxProfit <=0) chart.niceMaxProfit = calculateNiceStep(100000); // Default if profit is tiny
+    } else { // Handles zero or negative profit per unit
+        chart.niceMaxProfit = calculateNiceStep(100000); // A small positive default max
+        chart.niceMinProfit = Math.floor((minPossibleProfit * 1.1) / calculateNiceStep(Math.abs(minPossibleProfit * 1.1))) * calculateNiceStep(Math.abs(minPossibleProfit * 1.1));
+        if (chart.niceMinProfit >=0 && minPossibleProfit < 0) chart.niceMinProfit = -calculateNiceStep(100000); // Default negative if profit is tiny negative
+        if (chart.profitPerUnit === 0) chart.niceMinProfit = 0;
+    }
+    // Ensure niceMaxProfit is always greater than niceMinProfit
+    if (chart.niceMaxProfit <= chart.niceMinProfit) {
+        chart.niceMaxProfit = chart.niceMinProfit + calculateNiceStep(Math.abs(chart.niceMinProfit) || 100000);
+    }
+
+    chart.yStep = calculateNiceStep(chart.niceMaxProfit - chart.niceMinProfit, 5);
+    if (chart.yStep === 0) chart.yStep = (chart.niceMaxProfit - chart.niceMinProfit) / 5 || 1;
+
+
+    // --- Main Draw Function (Static Elements) ---
+    const drawStaticChart = () => {
+        chart.ctx.clearRect(0, 0, chart.width, chart.height);
+        drawBackground();
+        drawGridAndAxes();
+        drawLabelsAndTitles();
+        drawProfitLine();
+    };
+
+    drawStaticChart(); // Initial draw of static elements
+
+    // Draw the point for currentVolume (if provided) on top of the static chart
+    if (typeof currentVolume === 'number') {
+        const currentProfit = currentVolume * chart.profitPerUnit;
+        // Store it for potential redraw on hover end
+        chart.currentHoverData = { volume: currentVolume, profit: currentProfit, isCurrentVolumePoint: true };
+        drawTooltipAndPoint(currentVolume, currentProfit);
+    } else {
+        chart.currentHoverData = null;
+    }
+
+    // --- Mouse Move Handler for Tooltips (More Efficient) ---
+    const handleMouseMove = (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const mouseX = e.clientX - rect.left;
+      const mouseY = e.clientY - rect.top;
+      const { padding, width, height, maxVolume, profitPerUnit } = chartInstanceRef.current;
+
+      if (mouseX >= padding.left && mouseX <= width - padding.right &&
+          mouseY >= padding.top && mouseY <= height - padding.bottom) {
+        
+        const volume = Math.max(0, Math.min(maxVolume, Math.round(((mouseX - padding.left) / (width - padding.left - padding.right)) * maxVolume)));
+        const profit = volume * profitPerUnit;
+
+        // Redraw static parts, then the new hover point
+        drawStaticChart(); 
+        chartInstanceRef.current.currentHoverData = { volume, profit, isCurrentVolumePoint: false };
+        drawTooltipAndPoint(volume, profit);
+
+      } else {
+        // If mouse moves out, redraw static chart and the original currentVolume point if it exists
+        if (chartInstanceRef.current.currentHoverData && !chartInstanceRef.current.currentHoverData.isCurrentVolumePoint) {
+            drawStaticChart();
+            if (typeof currentVolume === 'number') {
+                const cvProfit = currentVolume * chartInstanceRef.current.profitPerUnit;
+                chartInstanceRef.current.currentHoverData = { volume: currentVolume, profit: cvProfit, isCurrentVolumePoint: true };
+                drawTooltipAndPoint(currentVolume, cvProfit);
+            } else {
+                chartInstanceRef.current.currentHoverData = null;
+            }
+        }
+      }
+    };
+
+    canvas.addEventListener('mousemove', handleMouseMove);
+    // Optional: Add a mouseleave listener to clear the hover tooltip and redraw the currentVolume point
+    const handleMouseLeave = () => {
+        drawStaticChart();
+        if (typeof currentVolume === 'number') {
+            const cvProfit = currentVolume * chartInstanceRef.current.profitPerUnit;
+            chartInstanceRef.current.currentHoverData = { volume: currentVolume, profit: cvProfit, isCurrentVolumePoint: true };
+            drawTooltipAndPoint(currentVolume, cvProfit);
+        } else {
+            chartInstanceRef.current.currentHoverData = null;
+        }
+    };
+    canvas.addEventListener('mouseleave', handleMouseLeave);
+
+
+    return () => {
+      canvas.removeEventListener('mousemove', handleMouseMove);
+      canvas.removeEventListener('mouseleave', handleMouseLeave);
+    };
+
+  }, [
+    salesPricePerUnit, 
+    costPerUnit, 
+    currentVolume, 
+    theme, // theme.palette.cmyk.yellow is used
+    language, t, // For localization in formatCurrency and titles
+    formatCurrency, calculateNiceStep, toCanvasX, toCanvasY, // Memoized helpers
+    drawBackground, drawGridAndAxes, drawLabelsAndTitles, drawProfitLine, drawTooltipAndPoint // Memoized draw functions
+  ]);
   
   return (
-    <Box sx={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-      <Typography variant="h6" align="center" gutterBottom>
-        Profit vs. Sales Volume
-      </Typography>
-      
-      {/* Canvas for line chart */}
-      <Box sx={{ position: 'relative', width: '100%', height: '220px', display: 'flex', justifyContent: 'center' }}>
-        <canvas ref={canvasRef} width={600} height={350} style={{ maxWidth: '100%', maxHeight: '100%' }} />
-      </Box>
-      
-      {/* Current profit info */}
-      <Box sx={{ mt: 2, textAlign: 'center', bgcolor: '#f5f5f5', py: 1, px: 2, borderRadius: 1, width: 'auto' }}>
-        <Typography variant="body1" fontWeight="600" color="text.primary">
-          Profit per unit: <span style={{ color: theme.palette.primary.main }}>{formatCurrency(profitPerUnit)}</span>
-        </Typography>
+    <Box sx={{ width: '100%', height: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+      <Box sx={{ width: '100%', maxWidth: '600px', aspectRatio: '16 / 9', mb: 2 }}> 
+        <canvas 
+            ref={canvasRef} 
+            width={600}  /* Base width */
+            height={337.5} /* Base height for 16:9 */
+            style={{ display: 'block', width: '100%', height: '100%'}} 
+        />
       </Box>
     </Box>
   );

@@ -52,6 +52,14 @@ const translations = {
     payback: "Payback",
     cost: "Cost",
     profit: "Profit",
+
+    // Chart translations
+    profitVsSalesVolume: "Profit vs. Sales Volume",
+    monthlySalesVolumeUnits: "Monthly Sales Volume (units)",
+    monthlyProfitJPY: "Monthly Profit (JPY)",
+    profitPerUnit: "Profit per unit",
+    volumeLabel: "Volume",
+    profitLabel: "Profit",
     
     // Status messages
     excellentInvestment: "Excellent Investment",
@@ -140,6 +148,14 @@ const translations = {
     payback: "回収期間",
     cost: "コスト",
     profit: "利益",
+
+    // Chart translations
+    profitVsSalesVolume: "利益 vs. 販売量",
+    monthlySalesVolumeUnits: "月間販売数量 (個)",
+    monthlyProfitJPY: "月間粗利 (円)",
+    profitPerUnit: "単価当たりの粗利",
+    volumeLabel: "数量",
+    profitLabel: "粗利",
     
     // Status messages
     excellentInvestment: "優れた投資",
