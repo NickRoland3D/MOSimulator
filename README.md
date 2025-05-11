@@ -34,6 +34,14 @@ A modern web application designed for potential buyers and sales teams to simula
 * **Organized Detail Cards** for production and ink usage information
 * **Clear Formatting** for currency values and percentages
 
+### PDF Export Functionality
+
+* **Professional PDF Reports** with complete simulation results
+* **Comprehensive Data Tables** including financial metrics, production details, and ink usage
+* **Multi-language Support** with localized PDF content based on current UI language
+* **Automatic File Naming** with date stamps for easy identification
+* **Clean Layout** optimized for printing and sharing with clients
+
 ## Technology Stack
 
 * **Frontend**: React.js with Material UI
@@ -41,6 +49,7 @@ A modern web application designed for potential buyers and sales teams to simula
 * **Styling**: Custom theme with CMYK palette
 * **Charts**: Custom Canvas-based visualizations
 * **Animations**: CSS transitions and keyframe animations
+* **PDF Generation**: jsPDF with autotable plugin for structured, professional reports
 
 ## Calculations & Data
 
@@ -57,7 +66,7 @@ The simulator performs a variety of calculations to determine profitability:
 ### Installation
 
 ```bash
-cd /Users/nicholasgobert/Desktop/Apps/MO180SalesSimulator
+cd /Users/nicholasgobert/Desktop/Apps/MOSimulator
 npm install
 npm start
 ```
@@ -76,11 +85,15 @@ npm start
    * Explore the different charts using the tabs
    * Review detailed production and ink usage information
 
-3. **Phase 2 Features** (Coming Soon):
-   * Multi-language support (English/Japanese)
-   * PDF export functionality
+3. **Export Results**:
+   * Click the "DOWNLOAD PDF" button to generate a comprehensive PDF report
+   * Share the PDF with clients or stakeholders for further analysis
+   * PDF is automatically named with the current date for easy reference
+
+4. **Phase 2 Features** (Coming Soon):
    * Multi-model support
    * Region-based configuration
+   * Interactive 3D product visualization
 
 ## Design Philosophy
 
@@ -91,3 +104,4 @@ The interface follows a modern, minimalist approach with subtle CMYK color accen
 Developed for Roland DG Corporation to assist in the sales process for the MO-180 UV printer.
 
 © 2025 Roland DG Corporation
+

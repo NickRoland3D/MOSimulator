@@ -13,6 +13,7 @@ import { useTheme } from '@mui/material/styles';
 import { useLanguage } from '../../context/LanguageContext';
 import { getPaybackStatus } from '../../utils/calculations';
 import ChartTabs from '../Charts/ChartTabs';
+import { printResults } from '../../utils/pdf/generatePDF';
 
 /**
  * ResultsPanel Component
@@ -52,7 +53,9 @@ const ResultsPanel = ({ results }) => {
   // Add inputs to results for charts
   const enhancedResults = {
     ...results,
+    language,
     inputs: {
+      ...results.inputs,
       salesPricePerUnit: results.monthlySales / results.inputs?.monthlySalesVolume || 0,
       monthlySalesVolume: results.inputs?.monthlySalesVolume || 0
     }
@@ -141,6 +144,11 @@ const ResultsPanel = ({ results }) => {
       </Typography>
     </Box>
   );
+
+  // Handler for print-to-PDF function
+  const handlePrintResults = () => {
+    printResults(enhancedResults, t);
+  };
 
   return (
     <Box>
@@ -352,7 +360,7 @@ const ResultsPanel = ({ results }) => {
               boxShadow: 4
             }
           }}
-          disabled={true} // Will be enabled in Phase 2
+          onClick={handlePrintResults}
         >
           {t('downloadPDF')}
         </Button>

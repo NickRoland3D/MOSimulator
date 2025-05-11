@@ -94,7 +94,20 @@ const translations = {
     cmykInk: "CMYK (cc)",
     primerInk: "Primer (cc)",
     inkUsageFormula: "Ink usage is calculated using a scaling formula: scale = (Short_Edge / 65)²",
-    printsPerHour: "prints/hour"
+    printsPerHour: "prints/hour",
+    
+    // PDF specific translations
+    mo180Simulator: "MO-180 Cost Simulator",
+    profitabilityAnalysis: "Profitability Analysis",
+    generatedOn: "Generated on",
+    keySummary: "Key Summary",
+    metric: "Metric",
+    value: "Value",
+    parameter: "Parameter",
+    inkType: "Ink Type",
+    volume: "Volume",
+    page: "Page",
+    of: "of"
   },
   ja: {
     // App title and subtitle
@@ -190,7 +203,20 @@ const translations = {
     cmykInk: "CMYK (cc)",
     primerInk: "プライマー (cc)",
     inkUsageFormula: "インク使用量は次の計算式で算出されます：倍率 = (短辺 / 65)²",
-    printsPerHour: "回/時間"
+    printsPerHour: "回/時間",
+    
+    // PDF specific translations
+    mo180Simulator: "MO-180 コストシミュレーター",
+    profitabilityAnalysis: "収益性分析",
+    generatedOn: "作成日",
+    keySummary: "重要なサマリー",
+    metric: "指標",
+    value: "値",
+    parameter: "パラメータ",
+    inkType: "インクタイプ",
+    volume: "容量",
+    page: "ページ",
+    of: "の"
   }
 };
 
