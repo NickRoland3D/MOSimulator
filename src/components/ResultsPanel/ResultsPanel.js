@@ -40,7 +40,7 @@ const ResultsPanel = ({ results }) => {
     // Place the currency symbol after the number for Japanese
     if (currentLang === 'ja') {
       return isEstimate 
-        ? `${formatNumber(Math.round(amount))}${t('currency')}役` 
+        ? `役${formatNumber(Math.round(amount))}${t('currency')}` 
         : `${formatNumber(Math.round(amount))}${t('currency')}`;
     }
     // Default format for other languages
