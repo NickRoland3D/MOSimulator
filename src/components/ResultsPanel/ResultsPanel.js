@@ -340,8 +340,14 @@ const ResultsPanel = ({ results }) => {
             </Grid>
             
             <Typography variant="body2" sx={{ fontWeight: 500 }}>
-              {t('inkCostPerUnit')}: {formatCurrency(results.inkCostPerUnit)}
+              {t('inkCostPerUnit')}: {language === 'ja' ? t('approximateInkCost') : formatCurrency(results.inkCostPerUnit)}
             </Typography>
+            
+            {language === 'ja' && (
+              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1 }}>
+                {t('inkCostApproximate')}
+              </Typography>
+            )}
           </CardContent>
         </Card>
       </Fade>

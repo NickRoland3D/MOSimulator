@@ -107,7 +107,12 @@ const translations = {
     inkType: "Ink Type",
     volume: "Volume",
     page: "Page",
-    of: "of"
+    of: "of",
+    
+    // New additions
+    inkCostApproximate: "Ink cost is approximate",
+    approximateInkCost: "Approximately 3 yen",
+    approximatePrefix: "Approximately"
   },
   ja: {
     // App title and subtitle
@@ -129,7 +134,7 @@ const translations = {
     priceParameters: "価格パラメータ",
     salesPricePerUnit: "販売単価/個",
     materialCostPerUnit: "材料費原価/個",
-    laborCostPerHour: "人件費/時",
+    laborCostPerHour: "約人件費/時",
     inkPrice: "インク価格",
     
     // Volume section
@@ -143,7 +148,7 @@ const translations = {
     monthlyGrossProfit: "月間粗利益",
     grossProfitMargin: "粗利益率",
     investmentPaybackPeriod: "投資回収期間",
-    costPerUnit: "ユニット当たりのコスト",
+    costPerUnit: "一個当たりの原価",
     operatingHours: "稼働時間",
     hours: "時間",
     months: "ヶ月",
@@ -154,7 +159,7 @@ const translations = {
     white: "ホワイト",
     cmyk: "CMYK",
     primer: "プライマー",
-    inkCostPerUnit: "ユニット当たりのインクコスト",
+    inkCostPerUnit: "一個当たりのインクコスト",
     downloadPDF: "PDFをダウンロード",
     
     // Chart tabs
@@ -166,7 +171,7 @@ const translations = {
     profitVsSalesVolume: "利益 vs. 販売量",
     monthlySalesVolumeUnits: "月間販売数量 (個)",
     monthlyProfitJPY: "月間粗利 (円)",
-    profitPerUnit: "単価当たりの粗利",
+    profitPerUnit: "一個当たりの粗利",
     volumeLabel: "数量",
     profitLabel: "粗利",
     
@@ -179,11 +184,11 @@ const translations = {
     goodPaybackPeriod: "良好な回収期間",
     extendedPaybackPeriod: "長い回収期間",
     noProfitWithCurrentParameters: "現在のパラメータでは利益なし",
-    totalCostPerUnit: "ユニット当たりの総コスト",
-    costBreakdownPerUnit: "ユニット当たりのコスト内訳",
+    totalCostPerUnit: "一個当たりの総コスト",
+    costBreakdownPerUnit: "一個当たりのコスト内訳",
     material: "材料",
     ink: "インク",
-    labor: "人件費",
+    labor: "約人件費",
     
     // Units
     currency: "円",
@@ -216,7 +221,12 @@ const translations = {
     inkType: "インクタイプ",
     volume: "容量",
     page: "ページ",
-    of: "の"
+    of: "の",
+    
+    // New additions
+    inkCostApproximate: "インクコストは概算です",
+    approximateInkCost: "約3円",
+    approximatePrefix: "約"
   }
 };
 

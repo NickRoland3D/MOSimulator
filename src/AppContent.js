@@ -9,40 +9,35 @@ import {
   useMediaQuery
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
-import InputPanel from './components/InputPanel/InputPanel';
-import ResultsPanel from './components/ResultsPanel/ResultsPanel';
+import SimulationForm from './features/simulation/SimulationForm';
+import SimulationResults from './features/simulation/SimulationResults';
 import LanguageToggle from './components/LanguageToggle/LanguageToggle';
 import { useLanguage } from './context/LanguageContext';
-import { calculateAll, getPaybackStatus } from './utils/calculations';
-
-// Default values from PRD
-const defaultInputs = {
-  shortEdge: 90,
-  longEdge: 90,
-  salesPricePerUnit: 2500,
-  monthlySalesVolume: 300,
-  materialCostPerUnit: 200,
-  laborCostPerHour: 2000,
-  inkPricePerCC: 18
-};
+import useSimulation from './hooks/useSimulation';
+import { getPaybackStatus } from './services/calculationService';
+import { DEFAULT_INPUTS } from './config/constants';
 
 function AppContent() {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const { t } = useLanguage(); // Get translation function
   
-  // State for inputs and results
-  const [inputs, setInputs] = useState(defaultInputs);
-  const [results, setResults] = useState(null);
+  // Use our custom hook for simulation logic with default inputs from constants
+  const { 
+    inputs, 
+    results, 
+    handleInputChange 
+  } = useSimulation(DEFAULT_INPUTS);
+  
   const [hasCalculated, setHasCalculated] = useState(false);
   const [showAppearAnimation, setShowAppearAnimation] = useState(true);
 
-  // Calculate results whenever inputs change
+  // Set calculation flag when results are available
   useEffect(() => {
-    const calculatedResults = calculateAll(inputs);
-    setResults(calculatedResults.results);
-    setHasCalculated(true);
-  }, [inputs]);
+    if (results) {
+      setHasCalculated(true);
+    }
+  }, [results]);
   
   // Turn off initial animations after first render
   useEffect(() => {
@@ -51,14 +46,6 @@ function AppContent() {
     }, 2000);
     return () => clearTimeout(timer);
   }, []);
-
-  // Handle input changes
-  const handleInputChange = (name, value) => {
-    setInputs(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
 
   // Get background color for results panel based on payback period
   const getResultsPanelBgColor = () => {
@@ -137,7 +124,7 @@ function AppContent() {
                   }
                 }}
               >
-                <InputPanel 
+                <SimulationForm 
                   inputs={inputs} 
                   onInputChange={handleInputChange} 
                 />
@@ -167,7 +154,7 @@ function AppContent() {
                   }}
                 >
                   {results && (
-                    <ResultsPanel results={results} />
+                    <SimulationResults results={results} />
                   )}
                 </Paper>
               </Box>
