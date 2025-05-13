@@ -1,17 +1,58 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { 
   Popover, 
   Typography, 
-  Box
+  Box,
+  TextField,
+  InputAdornment
 } from '@mui/material';
 import { useLanguage } from '../../../context/LanguageContext';
 
 /**
  * PrinterInfoPopover Component
  * Displays printer specifications in a popover when info icon is clicked
+ * Now with directly editable Initial Investment parameter
  */
-const PrinterInfoPopover = ({ open, anchorEl, handleClose }) => {
+const PrinterInfoPopover = ({ open, anchorEl, handleClose, initialInvestment, onInitialInvestmentChange }) => {
   const { t, language } = useLanguage(); // Get translation function and current language
+  
+  // State for input value
+  const [tempValue, setTempValue] = useState(initialInvestment);
+  
+  // Format number with commas for display
+  const formatNumber = (num) => {
+    return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  };
+  
+  // Handle input change
+  const handleInputChange = (event) => {
+    // Remove commas and convert to number
+    const value = parseInt(event.target.value.replace(/,/g, ''), 10);
+    setTempValue(isNaN(value) ? '' : value);
+  };
+  
+  // Handle blur to save value
+  const handleBlur = () => {
+    if (!isNaN(tempValue) && tempValue > 0) {
+      onInitialInvestmentChange(tempValue);
+    } else {
+      // Reset to current value if invalid
+      setTempValue(initialInvestment);
+    }
+  };
+  
+  // Handle key press events
+  const handleKeyPress = (event) => {
+    if (event.key === 'Enter') {
+      if (!isNaN(tempValue) && tempValue > 0) {
+        onInitialInvestmentChange(tempValue);
+      } else {
+        // Reset to current value if invalid
+        setTempValue(initialInvestment);
+      }
+      event.target.blur();
+    }
+  };
   
   return (
     <Popover
@@ -46,10 +87,38 @@ const PrinterInfoPopover = ({ open, anchorEl, handleClose }) => {
           {t('baseParameters')}
         </Typography>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, ml: 1 }}>
-          <Typography variant="body2" sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontWeight: 500 }}>{t('initialInvestment')}:</span> 
-            <span style={{ fontWeight: 600 }}>{language === 'ja' ? `3,780,000${t('currency')}` : `${t('currency')} 3,780,000`}</span>
-          </Typography>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Typography variant="body2" sx={{ fontWeight: 500 }}>
+              {t('initialInvestment')}:
+            </Typography>
+            <TextField
+              value={tempValue}
+              onChange={handleInputChange}
+              onBlur={handleBlur}
+              onKeyDown={handleKeyPress}
+              size="small"
+              type="text"
+              InputProps={{
+                startAdornment: language !== 'ja' && <InputAdornment position="start">{t('currency')}</InputAdornment>,
+                endAdornment: language === 'ja' && <InputAdornment position="end">{t('currency')}</InputAdornment>,
+                sx: { fontWeight: 600 }
+              }}
+              sx={{
+                width: '200px',
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: '8px',
+                },
+                // Remove inner arrows from number inputs
+                '& input[type=number]::-webkit-inner-spin-button, & input[type=number]::-webkit-outer-spin-button': {
+                  WebkitAppearance: 'none',
+                  margin: 0
+                },
+                '& input[type=number]': {
+                  MozAppearance: 'textfield'
+                }
+              }}
+            />
+          </Box>
           <Typography variant="body2" sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ fontWeight: 500 }}>{t('printableArea')}:</span> 
             <span style={{ fontWeight: 600 }}>305mm × 458mm</span>

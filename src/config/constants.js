@@ -6,7 +6,7 @@
 // Printer specifications
 export const PRINTER_SPECIFICATIONS = {
   name: 'MO-180',
-  initialInvestment: 3780000, // JPY
+  initialInvestment: 3780000, // JPY (default value)
   printSpeed: 6, // prints per hour
   printableArea: {
     width: 305, // mm
@@ -22,7 +22,8 @@ export const DEFAULT_INPUTS = {
   monthlySalesVolume: 300,
   materialCostPerUnit: 200,
   laborCostPerHour: 2000,
-  inkPricePerCC: 18
+  inkPricePerCC: 18,
+  initialInvestment: PRINTER_SPECIFICATIONS.initialInvestment // Adding to inputs for dynamic updates
 };
 
 // UI constants
@@ -35,7 +36,8 @@ export const UI_CONSTANTS = {
     monthlySalesVolume: { min: 0, max: 1000 },
     materialCostPerUnit: { min: 0, max: null },
     laborCostPerHour: { min: 0, max: null },
-    inkPricePerCC: { min: 0, max: null }
+    inkPricePerCC: { min: 0, max: null },
+    initialInvestment: { min: 1, max: null } // Adding range for initialInvestment
   },
   
   // Step sizes for increment/decrement
@@ -46,7 +48,8 @@ export const UI_CONSTANTS = {
     monthlySalesVolume: 10,
     materialCostPerUnit: 10,
     laborCostPerHour: 100,
-    inkPricePerCC: 1
+    inkPricePerCC: 1,
+    initialInvestment: 100000 // Adding step size for initialInvestment
   },
   
   // Chart colors (CMYK-inspired)

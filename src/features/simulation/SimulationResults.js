@@ -32,13 +32,10 @@ const SimulationResults = ({ results }) => {
     });
   };
 
-  // Helper function to format currency
+  // Helper function to format currency - ensuring 円 is always after the number in Japanese
   const formatCurrency = (amount) => {
-    // Get the current language
-    const currentLang = language;
-    
     // Place the currency symbol after the number for Japanese
-    if (currentLang === 'ja') {
+    if (language === 'ja') {
       return `${formatNumber(Math.round(amount))}${t('currency')}`;
     }
     // Default format for other languages
@@ -340,7 +337,7 @@ const SimulationResults = ({ results }) => {
             </Grid>
             
             <Typography variant="body2" sx={{ fontWeight: 500 }}>
-              {t('inkCostPerUnit')}: {language === 'ja' ? t('approximateInkCost') : formatCurrency(results.inkCostPerUnit)}
+              {t('inkCostPerUnit')}: {language === 'ja' ? `${t('approximatePrefix')}${formatNumber(results.inkCostPerUnit)}${t('currency')}` : formatCurrency(results.inkCostPerUnit)}
             </Typography>
             
             {language === 'ja' && (

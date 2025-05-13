@@ -33,13 +33,15 @@ const ResultsPanel = ({ results }) => {
   };
 
   // Helper function to format currency
-  const formatCurrency = (amount) => {
+  const formatCurrency = (amount, isEstimate = false) => {
     // Get the current language
     const currentLang = language;
     
     // Place the currency symbol after the number for Japanese
     if (currentLang === 'ja') {
-      return `${formatNumber(Math.round(amount))}${t('currency')}`;
+      return isEstimate 
+        ? `${formatNumber(Math.round(amount))}${t('currency')}役` 
+        : `${formatNumber(Math.round(amount))}${t('currency')}`;
     }
     // Default format for other languages
     return `${t('currency')} ${formatNumber(Math.round(amount))}`;
@@ -149,6 +151,9 @@ const ResultsPanel = ({ results }) => {
   const handlePrintResults = () => {
     printResults(enhancedResults, t);
   };
+
+  // Calculate labor cost - this is an estimate
+  const laborCost = (results.costPerUnit || 0) - (results.inputs?.materialCostPerUnit || 0) - (results.inkCostPerUnit || 0);
 
   return (
     <Box>
@@ -340,7 +345,7 @@ const ResultsPanel = ({ results }) => {
             </Grid>
             
             <Typography variant="body2" sx={{ fontWeight: 500 }}>
-              {t('inkCostPerUnit')}: {language === 'ja' ? t('approximateInkCost') : formatCurrency(results.inkCostPerUnit)}
+              {t('inkCostPerUnit')}: {language === 'ja' ? formatCurrency(results.inkCostPerUnit, true) : formatCurrency(results.inkCostPerUnit)}
             </Typography>
             
             {language === 'ja' && (

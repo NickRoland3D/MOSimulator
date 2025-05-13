@@ -112,7 +112,12 @@ const translations = {
     // New additions
     inkCostApproximate: "Ink cost is approximate",
     approximateInkCost: "Approximately 3 yen",
-    approximatePrefix: "Approximately"
+    approximatePrefix: "Approximately",
+    
+    // Edit buttons and actions
+    edit: "Edit",
+    save: "Save",
+    cancel: "Cancel"
   },
   ja: {
     // App title and subtitle
@@ -226,7 +231,12 @@ const translations = {
     // New additions
     inkCostApproximate: "インクコストは概算です",
     approximateInkCost: "約3円",
-    approximatePrefix: "約"
+    approximatePrefix: "約",
+    
+    // Edit buttons and actions
+    edit: "編集",
+    save: "保存",
+    cancel: "キャンセル"
   }
 };
 

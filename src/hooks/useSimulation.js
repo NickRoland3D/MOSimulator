@@ -22,7 +22,7 @@ const useSimulation = (initialInputs) => {
     });
   }, []);
 
-  // Format currency for display
+  // Format currency for display - ensures 円 always appears after the number in Japanese
   const formatCurrency = useCallback((amount, language) => {
     if (typeof amount !== 'number' || isNaN(amount)) return 'N/A';
     

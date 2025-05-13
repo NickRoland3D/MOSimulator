@@ -15,13 +15,15 @@ export const generatePrintableHTML = (results, t) => {
   };
 
   // Helper function to format currency
-  const formatCurrency = (amount) => {
+  const formatCurrency = (amount, isEstimate = false) => {
     // Get the current language from the results
     const currentLang = results.language || 'en';
     
     // Place the currency symbol after the number for Japanese
     if (currentLang === 'ja') {
-      return `${formatNumber(Math.round(amount))}${t('currency')}`;
+      return isEstimate 
+        ? `${formatNumber(Math.round(amount))}${t('currency')}役` 
+        : `${formatNumber(Math.round(amount))}${t('currency')}`;
     }
     // Default format for other languages
     return `${t('currency')} ${formatNumber(Math.round(amount))}`;
@@ -52,6 +54,9 @@ export const generatePrintableHTML = (results, t) => {
       color: '#FFFFFF'
     };
   }
+
+  // Calculate labor cost - this is an estimate
+  const laborCost = (results.costPerUnit || 0) - (results.inputs?.materialCostPerUnit || 0) - (results.inkCostPerUnit || 0);
 
   // Generate HTML content with 2-column layout and matching color scheme
   const htmlContent = `
@@ -326,7 +331,7 @@ export const generatePrintableHTML = (results, t) => {
                 </tr>
                 <tr>
                   <td>${t('inkCostPerUnit')}</td>
-                  <td class="value-cell">${formatCurrency(results.inkCostPerUnit)}</td>
+                  <td class="value-cell">${results.language === 'ja' ? formatCurrency(results.inkCostPerUnit, true) : formatCurrency(results.inkCostPerUnit)}</td>
                 </tr>
               </table>
             </div>
@@ -375,11 +380,11 @@ export const generatePrintableHTML = (results, t) => {
                 </tr>
                 <tr>
                   <td>${t('ink')}</td>
-                  <td class="value-cell">${formatCurrency(results.inkCostPerUnit)}</td>
+                  <td class="value-cell">${results.language === 'ja' ? formatCurrency(results.inkCostPerUnit, true) : formatCurrency(results.inkCostPerUnit)}</td>
                 </tr>
                 <tr>
                   <td>${t('labor')}</td>
-                  <td class="value-cell">${formatCurrency((results.costPerUnit || 0) - (results.inputs?.materialCostPerUnit || 0) - (results.inkCostPerUnit || 0))}</td>
+                  <td class="value-cell">${results.language === 'ja' ? formatCurrency(laborCost, true) : formatCurrency(laborCost)}</td>
                 </tr>
               </table>
             </div>

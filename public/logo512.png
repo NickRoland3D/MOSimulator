@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" fill="none">
+  <rect width="512" height="512" fill="#0058A3"/>
+  <text x="256" y="280" font-family="Arial" font-size="100" font-weight="bold" fill="white" text-anchor="middle">MO-180</text>
+  <text x="256" y="360" font-family="Arial" font-size="50" fill="white" text-anchor="middle">Simulator</text>
+</svg>

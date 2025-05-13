@@ -9,7 +9,7 @@ import { useLanguage } from '../../../context/LanguageContext';
  */
 const CostBreakdownChart = ({ materialCost, inkCost, laborCost }) => {
   const theme = useTheme();
-  const { t } = useLanguage(); // Get translation function
+  const { t, language } = useLanguage(); // Get translation function and language
   const canvasRef = useRef(null);
   
   // Calculate total cost and percentages
@@ -18,8 +18,13 @@ const CostBreakdownChart = ({ materialCost, inkCost, laborCost }) => {
   const inkPercentage = (inkCost / totalCost) * 100;
   const laborPercentage = (laborCost / totalCost) * 100;
   
-  // Format currency with thousands separators
-  const formatCurrency = (amount) => `${t('currency')} ${Math.round(amount).toLocaleString()}`;
+  // Format currency with thousands separators - updated for Japanese format
+  const formatCurrency = (amount) => {
+    if (language === 'ja') {
+      return `${Math.round(amount).toLocaleString()}${t('currency')}`;
+    }
+    return `${t('currency')} ${Math.round(amount).toLocaleString()}`;
+  };
   
   // CMYK-inspired colors for the chart segments as specified in PRD
   const colors = {
@@ -87,12 +92,20 @@ const CostBreakdownChart = ({ materialCost, inkCost, laborCost }) => {
     ctx.fill();
     ctx.shadowColor = 'transparent';
     
+    // Format the total cost text with correct currency format
+    let displayText;
+    if (language === 'ja') {
+      displayText = `${Math.round(totalCost).toLocaleString()}${t('currency')}`;
+    } else {
+      displayText = `${t('currency')} ${Math.round(totalCost).toLocaleString()}`;
+    }
+    
     // Draw total cost in center with enhanced styling
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillStyle = theme.palette.text.primary;
     ctx.font = 'bold 16px ' + theme.typography.fontFamily;
-    ctx.fillText(formatCurrency(totalCost), centerX, centerY - 10);
+    ctx.fillText(displayText, centerX, centerY - 10);
     
     ctx.font = '12px ' + theme.typography.fontFamily;
     ctx.fillStyle = theme.palette.text.secondary;
@@ -120,7 +133,7 @@ const CostBreakdownChart = ({ materialCost, inkCost, laborCost }) => {
     ctx.globalAlpha = 1;
     ctx.shadowColor = 'transparent';
     
-  }, [materialCost, inkCost, laborCost, theme, materialPercentage, inkPercentage, laborPercentage, colors.material, colors.ink, colors.labor, totalCost]);
+  }, [materialCost, inkCost, laborCost, theme, materialPercentage, inkPercentage, laborPercentage, colors.material, colors.ink, colors.labor, totalCost, language, t]);
   
   return (
     <Box sx={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>

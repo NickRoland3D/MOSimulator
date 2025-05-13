@@ -8,7 +8,7 @@
 import { PRINTER_SPECIFICATIONS, UI_CONSTANTS } from '../config/constants';
 
 // Get printer constants from configuration
-const { initialInvestment: INITIAL_INVESTMENT, printSpeed: PRINT_SPEED, printableArea: PRINTABLE_AREA } = PRINTER_SPECIFICATIONS;
+const { printSpeed: PRINT_SPEED, printableArea: PRINTABLE_AREA } = PRINTER_SPECIFICATIONS;
 const { paybackThresholds } = UI_CONSTANTS;
 
 /**
@@ -173,15 +173,16 @@ export const calculateGrossProfitMargin = (salesPricePerUnit, costPerUnit) => {
  * Calculate investment payback period in months
  * 
  * @param {number} monthlyGrossProfit - Monthly gross profit in JPY
+ * @param {number} initialInvestment - Initial investment amount in JPY
  * @returns {number|string} Payback period in months or '-' if no profit
  */
-export const calculatePaybackPeriod = (monthlyGrossProfit) => {
+export const calculatePaybackPeriod = (monthlyGrossProfit, initialInvestment) => {
   // Handle no profit case
   if (monthlyGrossProfit <= 0) {
     return '-';
   }
   
-  return INITIAL_INVESTMENT / monthlyGrossProfit;
+  return initialInvestment / monthlyGrossProfit;
 };
 
 /**
@@ -198,7 +199,8 @@ export const calculateResults = (inputs) => {
     monthlySalesVolume,
     materialCostPerUnit,
     laborCostPerHour,
-    inkPricePerCC
+    inkPricePerCC,
+    initialInvestment = PRINTER_SPECIFICATIONS.initialInvestment // Use default if not provided
   } = inputs;
   
   // Calculate intermediate values
@@ -214,7 +216,7 @@ export const calculateResults = (inputs) => {
   const monthlySales = calculateMonthlySales(salesPricePerUnit, monthlySalesVolume);
   const monthlyGrossProfit = calculateMonthlyGrossProfit(salesPricePerUnit, costPerUnit, monthlySalesVolume);
   const grossProfitMargin = calculateGrossProfitMargin(salesPricePerUnit, costPerUnit);
-  const paybackPeriod = calculatePaybackPeriod(monthlyGrossProfit);
+  const paybackPeriod = calculatePaybackPeriod(monthlyGrossProfit, initialInvestment);
   
   // Format ink usage to 2 decimal places
   const formattedInkUsage = {
@@ -237,6 +239,7 @@ export const calculateResults = (inputs) => {
     monthlyGrossProfit,
     grossProfitMargin,
     paybackPeriod,
+    initialInvestment, // Include the initial investment value
     inputs // Include original inputs
   };
 };

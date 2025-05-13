@@ -30,14 +30,14 @@ const ProfitVolumeChart = ({ salesPricePerUnit, costPerUnit, currentVolume }) =>
     if (short) {
       if (Math.abs(amount) >= 1000000) {
         const value = (amount / 1000000).toFixed(1);
-        return language === 'ja' ? `${value}百万${currencySymbol}` : `${value}M ${currencySymbol}`;
+        return language === 'ja' ? `${value}百万${currencySymbol}` : `${currencySymbol} ${value}M`;
       } else if (Math.abs(amount) >= 1000) {
         const value = (amount / 1000).toFixed(0); // No decimal for K to avoid clutter
-        return language === 'ja' ? `${value}千${currencySymbol}` : `${value}K ${currencySymbol}`;
+        return language === 'ja' ? `${value}千${currencySymbol}` : `${currencySymbol} ${value}K`;
       }
-      return language === 'ja' ? `${Math.round(amount)}${currencySymbol}` : `${Math.round(amount)} ${currencySymbol}`;
+      return language === 'ja' ? `${Math.round(amount)}${currencySymbol}` : `${currencySymbol} ${Math.round(amount)}`;
     }
-    return language === 'ja' ? `${Math.round(amount).toLocaleString('ja-JP')}${currencySymbol}` : `${currencySymbol}${Math.round(amount).toLocaleString('en-US')}`;
+    return language === 'ja' ? `${Math.round(amount).toLocaleString('ja-JP')}${currencySymbol}` : `${currencySymbol} ${Math.round(amount).toLocaleString('en-US')}`;
   }, [t, language]);
 
   const calculateNiceStep = (maxValue, targetSteps = 5) => {

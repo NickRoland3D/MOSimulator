@@ -84,6 +84,11 @@ const SimulationForm = ({ inputs, onInputChange }) => {
     setInfoAnchorEl(null);
   };
   
+  // Handle initial investment change
+  const handleInitialInvestmentChange = (value) => {
+    onInputChange('initialInvestment', value);
+  };
+  
   // Handle numeric input changes with validation
   const handleNumericChange = (name, value, min, max) => {
     // Parse value as number
@@ -219,7 +224,7 @@ const SimulationForm = ({ inputs, onInputChange }) => {
           InputProps={{
             startAdornment: startAdornment && <InputAdornment position="start">{startAdornment}</InputAdornment>,
             endAdornment: endAdornment && <InputAdornment position="end">{endAdornment}</InputAdornment>,
-            disableUnderline: true,
+            // Remove disableUnderline property as it's not supported
           }}
           inputProps={{ 
             min,
@@ -256,11 +261,11 @@ const SimulationForm = ({ inputs, onInputChange }) => {
             },
             // Remove inner arrows from number inputs
             '& input[type=number]::-webkit-inner-spin-button, & input[type=number]::-webkit-outer-spin-button': {
-              '-webkit-appearance': 'none',
+              WebkitAppearance: 'none',
               margin: 0
             },
             '& input[type=number]': {
-              '-moz-appearance': 'textfield'
+              MozAppearance: 'textfield'
             }
           }}
         />
@@ -367,11 +372,11 @@ const SimulationForm = ({ inputs, onInputChange }) => {
               },
               // Remove inner arrows from number inputs
               '& input[type=number]::-webkit-inner-spin-button, & input[type=number]::-webkit-outer-spin-button': {
-                '-webkit-appearance': 'none',
+                WebkitAppearance: 'none',
                 margin: 0
               },
               '& input[type=number]': {
-                '-moz-appearance': 'textfield'
+                MozAppearance: 'textfield'
               }
             }}
           />
@@ -456,6 +461,8 @@ const SimulationForm = ({ inputs, onInputChange }) => {
           open={infoPopoverOpen}
           anchorEl={infoAnchorEl}
           handleClose={handleInfoClose}
+          initialInvestment={inputs.initialInvestment}
+          onInitialInvestmentChange={handleInitialInvestmentChange}
         />
       </Box>
 
@@ -467,7 +474,7 @@ const SimulationForm = ({ inputs, onInputChange }) => {
             overflow: 'visible',
             borderRadius: 3, // Rounded corners matching the design
             boxShadow: '0 2px 6px rgba(0, 0, 0, 0.08)', // Subtle shadow as in the design
-            transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+            transition: 'transform 0.3s ease, boxShadow 0.3s ease',
             '&:hover': {
               transform: 'translateY(-2px)',
               boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)'
@@ -511,7 +518,7 @@ const SimulationForm = ({ inputs, onInputChange }) => {
             overflow: 'visible',
             borderRadius: 3, // Rounded corners matching the design
             boxShadow: '0 2px 6px rgba(0, 0, 0, 0.08)', // Subtle shadow as in the design
-            transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+            transition: 'transform 0.3s ease, boxShadow 0.3s ease',
             '&:hover': {
               transform: 'translateY(-2px)',
               boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)'
@@ -614,11 +621,11 @@ const SimulationForm = ({ inputs, onInputChange }) => {
                       },
                       // Remove inner arrows from number inputs
                       '& input[type=number]::-webkit-inner-spin-button, & input[type=number]::-webkit-outer-spin-button': {
-                        '-webkit-appearance': 'none',
+                        WebkitAppearance: 'none',
                         margin: 0
                       },
                       '& input[type=number]': {
-                        '-moz-appearance': 'textfield'
+                        MozAppearance: 'textfield'
                       }
                     }}
                   />
@@ -652,7 +659,7 @@ const SimulationForm = ({ inputs, onInputChange }) => {
             overflow: 'visible',
             borderRadius: 3, // Rounded corners matching the design
             boxShadow: '0 2px 6px rgba(0, 0, 0, 0.08)', // Subtle shadow as in the design
-            transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+            transition: 'transform 0.3s ease, boxShadow 0.3s ease',
             '&:hover': {
               transform: 'translateY(-2px)',
               boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)'
