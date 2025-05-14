@@ -118,7 +118,8 @@ const translations = {
     // Edit buttons and actions
     edit: "Edit",
     save: "Save",
-    cancel: "Cancel"
+    cancel: "Cancel",
+    close: "Close"
   },
   ja: {
     // App title and subtitle
@@ -238,7 +239,8 @@ const translations = {
     // Edit buttons and actions
     edit: "編集",
     save: "保存",
-    cancel: "キャンセル"
+    cancel: "キャンセル",
+    close: "閉じる"
   }
 };
 
