@@ -22,7 +22,7 @@ const CostBreakdownChart = ({ materialCost, inkCost, laborCost }) => {
   const formatCurrency = (amount, isEstimate = false) => {
     if (language === 'ja') {
       return isEstimate 
-        ? `役${Math.round(amount).toLocaleString()}${t('currency')}` 
+        ? `約${Math.round(amount).toLocaleString()}${t('currency')}` 
         : `${Math.round(amount).toLocaleString()}${t('currency')}`;
     }
     return `${t('currency')} ${Math.round(amount).toLocaleString()}`;

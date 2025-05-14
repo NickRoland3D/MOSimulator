@@ -140,7 +140,7 @@ const translations = {
     priceParameters: "価格パラメータ",
     salesPricePerUnit: "販売単価/個",
     materialCostPerUnit: "材料費原価/個",
-    laborCostPerHour: "約人件費/時",
+    laborCostPerHour: "人件費/時",
     inkPrice: "インク価格",
     
     // Volume section
@@ -194,7 +194,7 @@ const translations = {
     costBreakdownPerUnit: "一個当たりのコスト内訳",
     material: "材料",
     ink: "インク",
-    labor: "約人件費",
+    labor: "人件費",
     
     // Units
     currency: "円",

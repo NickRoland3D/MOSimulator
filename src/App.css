@@ -100,6 +100,47 @@ input:focus {
   }
 }
 
+/* Improved mobile responsiveness */
+@media (max-width: 600px) {
+  .app-container {
+    padding: 0.5rem;
+  }
+  
+  .MuiContainer-root {
+    padding-left: 8px !important;
+    padding-right: 8px !important;
+  }
+  
+  /* Smaller font sizes on mobile */
+  body {
+    font-size: 14px;
+  }
+  
+  h5.MuiTypography-h5 {
+    font-size: 1.2rem;
+  }
+  
+  h6.MuiTypography-h6 {
+    font-size: 1.1rem;
+  }
+  
+  /* Adjust card padding for mobile */
+  .MuiCardContent-root {
+    padding: 12px !important;
+  }
+  
+  /* Adjust form controls for mobile */
+  .MuiFormControl-root {
+    margin-bottom: 8px !important;
+  }
+  
+  /* Make popover content mobile-friendly */
+  .MuiPopover-paper {
+    max-width: 90vw !important;
+    width: 90vw !important;
+  }
+}
+
 /* Enhanced card animation on hover */
 .MuiCard-root {
   transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -109,6 +150,14 @@ input:focus {
 .MuiCard-root:hover {
   transform: translateY(-5px) translateZ(0);
   box-shadow: 0px 12px 30px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* Mobile card hover fix */
+@media (max-width: 600px) {
+  .MuiCard-root:hover {
+    transform: none;
+    box-shadow: 0px 2px 6px rgba(0, 0, 0, 0.1) !important;
+  }
 }
 
 /* Enhanced tab styling */

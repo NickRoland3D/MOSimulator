@@ -9,10 +9,10 @@ export const useLanguage = () => useContext(LanguageContext);
 
 // Language provider component
 export const LanguageProvider = ({ children }) => {
-  // Try to get the language from localStorage or default to English
+  // Try to get the language from localStorage or default to Japanese
   const [language, setLanguage] = useState(() => {
     const savedLanguage = localStorage.getItem('language');
-    return savedLanguage || 'en';
+    return savedLanguage || 'ja';
   });
 
   // Save language preference to localStorage when it changes

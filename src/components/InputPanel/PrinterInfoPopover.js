@@ -2,7 +2,9 @@ import React from 'react';
 import { 
   Popover, 
   Typography, 
-  Box
+  Box,
+  useMediaQuery,
+  useTheme
 } from '@mui/material';
 import { useLanguage } from '../../context/LanguageContext';
 
@@ -12,6 +14,8 @@ import { useLanguage } from '../../context/LanguageContext';
  */
 const PrinterInfoPopover = ({ open, anchorEl, handleClose }) => {
   const { t, language } = useLanguage(); // Get translation function and current language
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   
   return (
     <Popover
@@ -20,18 +24,18 @@ const PrinterInfoPopover = ({ open, anchorEl, handleClose }) => {
       onClose={handleClose}
       anchorOrigin={{
         vertical: 'bottom',
-        horizontal: 'right',
+        horizontal: isMobile ? 'center' : 'right',
       }}
       transformOrigin={{
         vertical: 'top',
-        horizontal: 'right',
+        horizontal: isMobile ? 'center' : 'right',
       }}
       PaperProps={{
         sx: { 
-          width: 'auto', 
-          minWidth: 450, 
-          maxWidth: 500, 
-          p: 3,
+          width: isMobile ? '90vw' : 'auto', 
+          minWidth: isMobile ? 'auto' : 450, 
+          maxWidth: isMobile ? '90vw' : 500, 
+          p: isMobile ? 2 : 3,
           borderRadius: 2,
           boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)'
         }
@@ -46,11 +50,22 @@ const PrinterInfoPopover = ({ open, anchorEl, handleClose }) => {
           {t('baseParameters')}
         </Typography>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, ml: 1 }}>
-          <Typography variant="body2" sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Typography variant="body2" sx={{ 
+            display: 'flex', 
+            flexDirection: isMobile ? 'column' : 'row',
+            justifyContent: 'space-between', 
+            alignItems: isMobile ? 'flex-start' : 'center',
+            mb: isMobile ? 1 : 0
+          }}>
             <span style={{ fontWeight: 500 }}>{t('initialInvestment')}:</span> 
             <span style={{ fontWeight: 600 }}>{language === 'ja' ? `3,780,000${t('currency')}` : `${t('currency')} 3,780,000`}</span>
           </Typography>
-          <Typography variant="body2" sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Typography variant="body2" sx={{ 
+            display: 'flex', 
+            flexDirection: isMobile ? 'column' : 'row',
+            justifyContent: 'space-between', 
+            alignItems: isMobile ? 'flex-start' : 'center'
+          }}>
             <span style={{ fontWeight: 500 }}>{t('printableArea')}:</span> 
             <span style={{ fontWeight: 600 }}>305mm × 458mm</span>
           </Typography>

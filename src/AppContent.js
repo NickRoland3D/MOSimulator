@@ -20,6 +20,7 @@ import { DEFAULT_INPUTS } from './config/constants';
 function AppContent() {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const isSmallMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const { t } = useLanguage(); // Get translation function
   
   // Use our custom hook for simulation logic with default inputs from constants
@@ -73,18 +74,27 @@ function AppContent() {
   return (
     <Box className="app-wrapper">
       {/* Main Content */}
-      <Container maxWidth="lg" className="app-container">
+      <Container 
+        maxWidth="lg" 
+        className="app-container"
+        sx={{
+          px: isSmallMobile ? 1 : 2
+        }}
+      >
         {/* Language Toggle */}
-        <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: isSmallMobile ? 1 : 2 }}>
           <LanguageToggle />
         </Box>
         
-        <Box sx={{ my: { xs: 3, md: 4 }, textAlign: 'center' }}>
+        <Box sx={{ my: { xs: 2, md: 4 }, textAlign: 'center' }}>
           <Typography 
             variant="h3" 
             component="h1" 
             gutterBottom 
-            sx={{ fontWeight: 'bold' }}
+            sx={{ 
+              fontWeight: 'bold',
+              fontSize: isSmallMobile ? '1.75rem' : { xs: '2rem', md: '2.5rem' }
+            }}
             className="app-title"
           >
             {t('moSimulatorTitle') || 'MO-180 Sales Simulation Tool'}
@@ -96,15 +106,17 @@ function AppContent() {
               color: theme.palette.text.secondary, 
               maxWidth: 700, 
               mx: 'auto', 
-              mb: 4,
+              mb: { xs: 2, md: 4 },
+              fontSize: isSmallMobile ? '0.875rem' : 'inherit',
               animation: showAppearAnimation ? 'fadeIn 1.2s ease-out' : 'none',
+              px: isSmallMobile ? 1 : 0
             }}
           >
             {t('evaluateProfitability') || 'Evaluate profitability and ROI for the Roland DG MO-180 UV printer'}
           </Typography>
         </Box>
 
-        <Grid container spacing={4}>
+        <Grid container spacing={isSmallMobile ? 2 : 4}>
           {/* Input Panel */}
           <Grid item xs={12} md={inputPanelWidth}>
             <Box 
@@ -115,7 +127,7 @@ function AppContent() {
               <Paper 
                 elevation={2} 
                 sx={{ 
-                  p: { xs: 2, sm: 3 }, 
+                  p: { xs: 1.5, sm: 2, md: 3 }, 
                   height: '100%',
                   overflow: 'visible',
                   transition: 'all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)',
@@ -143,7 +155,7 @@ function AppContent() {
                 <Paper 
                   elevation={2} 
                   sx={{ 
-                    p: { xs: 2, sm: 3 }, 
+                    p: { xs: 1.5, sm: 2, md: 3 }, 
                     height: '100%',
                     overflow: 'visible',
                     backgroundColor: getResultsPanelBgColor(),
@@ -166,9 +178,9 @@ function AppContent() {
         <Box 
           component="footer" 
           sx={{ 
-            mt: 8, 
-            pt: 3, 
-            pb: 3, 
+            mt: { xs: 4, md: 8 }, 
+            pt: { xs: 2, md: 3 }, 
+            pb: { xs: 2, md: 3 }, 
             textAlign: 'center',
             borderTop: `1px solid ${theme.palette.divider}`,
             animation: showAppearAnimation ? 'fadeIn 1.5s ease-out' : 'none',
