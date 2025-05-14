@@ -5,13 +5,11 @@ import {
   Box,
   useMediaQuery,
   useTheme,
-  Dialog,
-  DialogTitle,
-  DialogContent,
+  SwipeableDrawer,
   IconButton,
   Button,
-  TextField,
-  Grid
+  Grid,
+  Divider
 } from '@mui/material';
 import { useLanguage } from '../../context/LanguageContext';
 
@@ -24,148 +22,142 @@ const CloseIcon = () => (
 
 /**
  * PrinterInfoPopover Component
- * Displays printer specifications in a popover when info icon is clicked
- * Uses Dialog for mobile devices and Popover for desktop
+ * Displays printer specifications
+ * Uses SwipeableDrawer for mobile devices and Popover for desktop
  */
 const PrinterInfoPopover = ({ open, anchorEl, handleClose }) => {
   const { t, language } = useLanguage(); // Get translation function and current language
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   
-  // Content to be displayed in both Popover and Dialog
+  // Content to be displayed in both Popover and Drawer
   const InfoContent = () => (
-    <>
-      <Box sx={{ mb: 2.5 }}>
-        <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 600, color: 'text.primary', mb: 1 }}>
-          {t('baseParameters')}
-        </Typography>
-        
-        <Grid container spacing={2}>
-          <Grid item xs={12}>
-            <Box sx={{ 
-              display: 'flex', 
-              flexDirection: isMobile ? 'column' : 'row',
-              justifyContent: 'space-between',
-              alignItems: isMobile ? 'flex-start' : 'center',
-              mb: 2
+    <Box sx={{ width: '100%' }}>
+      <Grid container spacing={2}>
+        <Grid item xs={12}>
+          <Box sx={{ 
+            display: 'flex', 
+            flexDirection: isMobile ? 'column' : 'row',
+            justifyContent: 'space-between',
+            alignItems: isMobile ? 'flex-start' : 'center',
+            mb: 2
+          }}>
+            <Typography variant="body1" component="span" sx={{ 
+              fontWeight: 500, 
+              mb: isMobile ? 1 : 0,
+              mr: isMobile ? 0 : 2 
             }}>
-              <Typography variant="body2" component="span" sx={{ 
-                fontWeight: 500, 
-                mb: isMobile ? 1 : 0,
-                mr: isMobile ? 0 : 2 
-              }}>
-                {t('initialInvestment')}:
-              </Typography>
-              <Typography variant="body2" component="span" sx={{ 
-                fontWeight: 600,
-                wordBreak: 'break-word',
-                maxWidth: '100%' 
-              }}>
-                {language === 'ja' ? `3,780,000${t('currency')}` : `${t('currency')} 3,780,000`}
-              </Typography>
-            </Box>
-          </Grid>
-          
-          <Grid item xs={12}>
-            <Box sx={{ 
-              display: 'flex', 
-              flexDirection: isMobile ? 'column' : 'row',
-              justifyContent: 'space-between',
-              alignItems: isMobile ? 'flex-start' : 'center' 
+              {t('initialInvestment')}:
+            </Typography>
+            <Typography variant="body1" component="span" sx={{ 
+              fontWeight: 600,
+              wordBreak: 'break-word'
             }}>
-              <Typography variant="body2" component="span" sx={{ 
-                fontWeight: 500, 
-                mb: isMobile ? 1 : 0,
-                mr: isMobile ? 0 : 2 
-              }}>
-                {t('printableArea')}:
-              </Typography>
-              <Typography variant="body2" component="span" sx={{ 
-                fontWeight: 600,
-                wordBreak: 'break-word',
-                maxWidth: '100%'
-              }}>
-                305mm × 458mm
-              </Typography>
-            </Box>
-          </Grid>
+              {language === 'ja' ? `3,780,000${t('currency')}` : `${t('currency')} 3,780,000`}
+            </Typography>
+          </Box>
         </Grid>
-      </Box>
-    </>
+        
+        <Grid item xs={12}>
+          <Box sx={{ 
+            display: 'flex', 
+            flexDirection: isMobile ? 'column' : 'row',
+            justifyContent: 'space-between',
+            alignItems: isMobile ? 'flex-start' : 'center' 
+          }}>
+            <Typography variant="body1" component="span" sx={{ 
+              fontWeight: 500, 
+              mb: isMobile ? 1 : 0,
+              mr: isMobile ? 0 : 2 
+            }}>
+              {t('printableArea')}:
+            </Typography>
+            <Typography variant="body1" component="span" sx={{ 
+              fontWeight: 600,
+              wordBreak: 'break-word'
+            }}>
+              305mm × 458mm
+            </Typography>
+          </Box>
+        </Grid>
+      </Grid>
+    </Box>
   );
   
-  // Mobile Dialog version with improved layout
+  // Mobile Drawer version
   if (isMobile) {
     return (
-      <Dialog
+      <SwipeableDrawer
+        anchor="bottom"
         open={open}
         onClose={handleClose}
-        fullWidth
-        maxWidth="xs"
-        sx={{
-          '& .MuiDialog-paper': {
-            margin: '16px',
-            width: 'calc(100% - 32px)',
-            maxWidth: 'calc(100% - 32px)',
-            borderRadius: '12px',
-            overflow: 'visible'
+        onOpen={() => {}}
+        disableSwipeToOpen
+        PaperProps={{
+          sx: {
+            borderTopLeftRadius: '16px',
+            borderTopRightRadius: '16px',
+            maxHeight: '85vh',
+            overflow: 'auto'
           }
         }}
       >
-        <DialogTitle 
+        {/* Handle for swiping */}
+        <Box 
           sx={{ 
-            display: 'flex', 
-            justifyContent: 'space-between',
-            alignItems: 'center', 
-            borderBottom: '1px solid rgba(0, 0, 0, 0.1)',
-            pb: 1,
-            pt: 2,
-            px: 2.5
+            width: '40px', 
+            height: '4px', 
+            backgroundColor: 'rgba(0, 0, 0, 0.2)', 
+            borderRadius: '2px',
+            margin: '12px auto 8px'
           }}
-        >
-          <Typography variant="h6" sx={{ 
-            fontWeight: 600,
-            fontSize: '1.1rem'
-          }}>
+        />
+        
+        {/* Header */}
+        <Box sx={{ 
+          display: 'flex', 
+          justifyContent: 'space-between', 
+          alignItems: 'center',
+          px: 3,
+          pb: 1,
+          pt: 1
+        }}>
+          <Typography variant="h6" sx={{ fontWeight: 600, fontSize: '1.1rem' }}>
             {t('printerSpecifications')}
           </Typography>
-          <IconButton 
-            edge="end" 
-            onClick={handleClose} 
-            aria-label="close" 
-            size="small"
-            sx={{ 
-              color: 'text.secondary'
-            }}
-          >
+          <IconButton onClick={handleClose} sx={{ p: 1 }}>
             <CloseIcon />
           </IconButton>
-        </DialogTitle>
-        <DialogContent sx={{ 
-          pt: 2.5,
-          pb: 3,
-          px: 2.5,
-          overflow: 'visible' 
-        }}>
+        </Box>
+        
+        <Divider />
+        
+        {/* Content */}
+        <Box sx={{ p: 3, pt: 2 }}>
+          <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 600, mb: 2 }}>
+            {t('baseParameters')}
+          </Typography>
+          
           <InfoContent />
           
-          <Box sx={{ mt: 3, display: 'flex', justifyContent: 'flex-end' }}>
+          {/* Bottom button */}
+          <Box sx={{ mt: 4, display: 'flex', justifyContent: 'center' }}>
             <Button 
-              onClick={handleClose} 
-              variant="contained" 
-              color="primary" 
-              size="small"
+              onClick={handleClose}
+              variant="contained"
+              fullWidth
               sx={{ 
+                borderRadius: '8px',
+                py: 1.5,
                 fontWeight: 500,
-                minWidth: '80px',
-                minHeight: '36px'
+                maxWidth: '250px'
               }}
             >
-              {t('close') || 'Close'}
+              {t('close')}
             </Button>
           </Box>
-        </DialogContent>
-      </Dialog>
+        </Box>
+      </SwipeableDrawer>
     );
   }
   
@@ -196,6 +188,10 @@ const PrinterInfoPopover = ({ open, anchorEl, handleClose }) => {
     >
       <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, borderBottom: '1px solid rgba(0, 0, 0, 0.1)', pb: 1, mb: 2 }}>
         {t('printerSpecifications')}
+      </Typography>
+      
+      <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 600, color: 'text.primary', mb: 1 }}>
+        {t('baseParameters')}
       </Typography>
       
       <InfoContent />
