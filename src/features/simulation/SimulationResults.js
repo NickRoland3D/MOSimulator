@@ -14,6 +14,7 @@ import { useLanguage } from '../../context/LanguageContext';
 import { getPaybackStatus } from '../../services/calculationService';
 import ChartTabs from '../visualization/ChartTabs';
 import { printResults } from '../../utils/pdf/generatePDF';
+import { PRINTER_SPECIFICATIONS } from '../../config/constants';
 
 /**
  * SimulationResults Component
@@ -55,7 +56,9 @@ const SimulationResults = ({ results }) => {
       ...results.inputs,
       salesPricePerUnit: results.monthlySales / results.inputs?.monthlySalesVolume || 0,
       monthlySalesVolume: results.inputs?.monthlySalesVolume || 0
-    }
+    },
+    // Ensure initialInvestment is included - either from results or config
+    initialInvestment: results.initialInvestment || PRINTER_SPECIFICATIONS.initialInvestment
   };
   
   // Determine the background color based on payback period

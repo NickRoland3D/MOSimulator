@@ -108,7 +108,8 @@ const translations = {
     volume: "Volume",
     page: "Page",
     of: "of",
-    
+    simulationImageCaption: "Simulations are based on the above image",
+
     // New additions
     inkCostApproximate: "Ink cost is approximate",
     approximateInkCost: "Approximately 3 yen",
@@ -227,6 +228,7 @@ const translations = {
     volume: "容量",
     page: "ページ",
     of: "の",
+    simulationImageCaption: "全てのシミュレーションは、この画像を基に算出しています",
     
     // New additions
     inkCostApproximate: "インクコストは概算です",

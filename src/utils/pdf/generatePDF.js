@@ -57,6 +57,15 @@ export const generatePrintableHTML = (results, t) => {
 
   // Calculate labor cost - this is an estimate
   const laborCost = (results.costPerUnit || 0) - (results.inputs?.materialCostPerUnit || 0) - (results.inkCostPerUnit || 0);
+  
+  // Sample image as base64 (lisa.png)
+  // NOTE: We're using a placeholder since we can't easily convert the image to base64 here
+  // In a real implementation, you'd want to convert the image file to base64 
+  // or serve it through a URL in the HTML
+  const sampleImageBase64 = '/assets/images/lisa.png';
+  
+  // Initial investment from the printer configuration
+  const initialInvestment = results.initialInvestment || 3780000; // Default from config
 
   // Generate HTML content with 2-column layout and matching color scheme
   const htmlContent = `
@@ -208,6 +217,9 @@ export const generatePrintableHTML = (results, t) => {
         .yellow-accent {
           border-left: 4px solid #ffc107;
         }
+        .blue-accent {
+          border-left: 4px solid #2196F3;
+        }
         .footer {
           margin-top: 30px;
           text-align: center;
@@ -233,6 +245,20 @@ export const generatePrintableHTML = (results, t) => {
         .print-button:hover {
           background-color: #00755e;
           box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        .sample-image {
+          max-width: 100%;
+          height: auto;
+          display: block;
+          margin: 0 auto 10px;
+          border-radius: 8px;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+        .sample-caption {
+          text-align: center;
+          color: #666;
+          margin-bottom: 10px;
+          font-size: 14px;
         }
         @media print {
           body {
@@ -277,6 +303,25 @@ export const generatePrintableHTML = (results, t) => {
       <div class="content-wrapper">
         <!-- Left column - Input parameters -->
         <div class="left-column">
+          <!-- Printer Specifications Card with Sample Image -->
+          <div class="card blue-accent">
+            <div class="card-header">
+              <h3>${t('printerSpecifications')}</h3>
+            </div>
+            <div class="card-content">
+              <img src="${sampleImageBase64}" alt="Sample Print" class="sample-image" />
+              <p class="sample-caption">${t('simulationImageCaption') || 'Simulations are based on the above image'}</p>
+              
+              <table>
+                <tr>
+                  <td>${t('initialInvestment')}</td>
+                  <td class="value-cell">${formatCurrency(initialInvestment)}</td>
+                </tr>
+                <!-- Removed the Printable Area row as requested -->
+              </table>
+            </div>
+          </div>
+        
           <div class="card cyan-accent">
             <div class="card-header">
               <h3>${t('simulationParameters')}</h3>
