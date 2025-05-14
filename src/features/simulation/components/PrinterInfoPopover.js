@@ -4,14 +4,17 @@ import {
   Typography, 
   Box,
   TextField,
-  InputAdornment
+  InputAdornment,
+  Divider
 } from '@mui/material';
 import { useLanguage } from '../../../context/LanguageContext';
+import LisaImage from '../../../assets/images/lisa.png';
 
 /**
  * PrinterInfoPopover Component
  * Displays printer specifications in a popover when info icon is clicked
  * Now with directly editable Initial Investment parameter
+ * And sample image display
  */
 const PrinterInfoPopover = ({ open, anchorEl, handleClose, initialInvestment, onInitialInvestmentChange }) => {
   const { t, language } = useLanguage(); // Get translation function and current language
@@ -53,6 +56,11 @@ const PrinterInfoPopover = ({ open, anchorEl, handleClose, initialInvestment, on
       event.target.blur();
     }
   };
+
+  // Updated text for the sample image section
+  const captionText = language === 'ja' 
+    ? '全てのシミュレーションは、この画像を基に算出しています'
+    : 'Simulations are based on the above image';
   
   return (
     <Popover
@@ -82,6 +90,51 @@ const PrinterInfoPopover = ({ open, anchorEl, handleClose, initialInvestment, on
         {t('printerSpecifications')}
       </Typography>
       
+      {/* Sample Image Section */}
+      <Box sx={{ mb: 2.5 }}>
+        <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 600, color: 'text.primary', mb: 1 }}>
+          {language === 'ja' ? 'サンプル印刷' : 'Sample Print'}
+        </Typography>
+        
+        <Box sx={{ ml: 1 }}>
+          {/* Image without any title text */}
+          <Box 
+            sx={{
+              width: '100%',
+              display: 'flex',
+              justifyContent: 'center',
+              mb: 1.5
+            }}
+          >
+            <img 
+              src={LisaImage}
+              alt="Lisa"
+              style={{
+                maxWidth: '100%',
+                height: 'auto',
+                borderRadius: '8px',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
+              }}
+            />
+          </Box>
+          
+          <Typography 
+            variant="body2" 
+            sx={{ 
+              fontWeight: 500, 
+              color: 'text.secondary',
+              textAlign: 'center',
+              mb: 1
+            }}
+          >
+            {captionText}
+          </Typography>
+        </Box>
+      </Box>
+      
+      <Divider sx={{ my: 2 }} />
+      
+      {/* Base Parameters Section */}
       <Box sx={{ mb: 2.5 }}>
         <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 600, color: 'text.primary', mb: 1 }}>
           {t('baseParameters')}
