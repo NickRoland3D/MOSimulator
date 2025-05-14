@@ -10,9 +10,10 @@ import {
   CardContent,
   Tooltip,
   Button,
-  Fade
+  Fade,
+  useMediaQuery,
+  useTheme
 } from '@mui/material';
-import { useTheme } from '@mui/material/styles';
 import { useLanguage } from '../../context/LanguageContext';
 import PrinterInfoPopover from './PrinterInfoPopover';
 
@@ -62,6 +63,8 @@ const InfoIcon = () => (
 const InputPanel = ({ inputs, onInputChange }) => {
   const theme = useTheme();
   const { t } = useLanguage(); // Get translation function
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const isExtraSmallMobile = useMediaQuery('(max-width:380px)');
   
   // State for printer info popover
   const [infoAnchorEl, setInfoAnchorEl] = useState(null);
@@ -163,7 +166,7 @@ const InputPanel = ({ inputs, onInputChange }) => {
       }}>
         {icon}
       </Box>
-      <Typography variant="h6" fontWeight="600" color="text.primary">
+      <Typography variant="h6" fontWeight="600" color="text.primary" sx={{ fontSize: isMobile ? '1.1rem' : '1.25rem' }}>
         {title}
       </Typography>
     </Box>
@@ -226,7 +229,7 @@ const InputPanel = ({ inputs, onInputChange }) => {
             max,
             style: { 
               textAlign: 'center',
-              fontSize: '1rem',
+              fontSize: isMobile ? '0.9rem' : '1rem',
               padding: '8px 0'
             }
           }}
@@ -316,9 +319,9 @@ const InputPanel = ({ inputs, onInputChange }) => {
           variant="outlined"
           onClick={() => handleStepperClick(name, -step, min, max)}
           sx={{
-            minWidth: '40px',
-            width: '40px',
-            height: '40px',
+            minWidth: isExtraSmallMobile ? '30px' : '40px',
+            width: isExtraSmallMobile ? '30px' : '40px',
+            height: isExtraSmallMobile ? '34px' : '40px',
             padding: 0,
             borderRadius: '8px', // Rounded corners matching the design
             fontSize: '1.2rem',
@@ -358,7 +361,7 @@ const InputPanel = ({ inputs, onInputChange }) => {
                 '& .MuiOutlinedInput-input': {
                   textAlign: 'center',
                   padding: '8px',
-                  fontSize: '1.25rem',
+                  fontSize: isMobile ? '1rem' : '1.25rem',
                   fontWeight: 500
                 },
                 '& .MuiOutlinedInput-notchedOutline': {
@@ -381,7 +384,7 @@ const InputPanel = ({ inputs, onInputChange }) => {
             sx={{ 
               flexGrow: 1, 
               textAlign: 'center', 
-              fontSize: '1.25rem',
+              fontSize: isMobile ? '1rem' : '1.25rem',
               fontWeight: 500,
               cursor: 'text',
               padding: '6px 0',
@@ -401,9 +404,9 @@ const InputPanel = ({ inputs, onInputChange }) => {
           variant="outlined"
           onClick={() => handleStepperClick(name, step, min, max)}
           sx={{
-            minWidth: '40px',
-            width: '40px',
-            height: '40px',
+            minWidth: isExtraSmallMobile ? '30px' : '40px',
+            width: isExtraSmallMobile ? '30px' : '40px',
+            height: isExtraSmallMobile ? '34px' : '40px',
             padding: 0,
             borderRadius: '8px', // Rounded corners matching the design
             fontSize: '1.2rem',
@@ -431,7 +434,12 @@ const InputPanel = ({ inputs, onInputChange }) => {
   return (
     <Box>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3.5 }}>
-        <Typography variant="h5" gutterBottom sx={{ fontWeight: 600, mt: 1, color: 'text.primary' }}>
+        <Typography variant="h5" gutterBottom sx={{ 
+          fontWeight: 600, 
+          mt: 1, 
+          color: 'text.primary',
+          fontSize: isMobile ? '1.25rem' : '1.5rem'
+        }}>
           {t('simulationParameters')}
         </Typography>
         <Tooltip title={t('printerSpecifications')}>
@@ -474,11 +482,11 @@ const InputPanel = ({ inputs, onInputChange }) => {
             }
           }}
         >
-          <CardContent sx={{ px: 3, py: 2.5 }}>
+          <CardContent sx={{ px: { xs: 2, sm: 3 }, py: 2.5 }}>
             <SectionHeader icon={<DimensionsIcon />} title={t('productDimensions')} />
             
-            <Grid container spacing={3}>
-              <Grid item xs={6}>
+            <Grid container spacing={isMobile ? 2 : 3}>
+              <Grid item xs={12} sm={6}>
                 <DimensionInput
                   label={t('shortEdge')}
                   value={inputs.shortEdge}
@@ -488,7 +496,7 @@ const InputPanel = ({ inputs, onInputChange }) => {
                   helperText={`${t('range')}: 10-305mm`}
                 />
               </Grid>
-              <Grid item xs={6}>
+              <Grid item xs={12} sm={6}>
                 <DimensionInput
                   label={t('longEdge')}
                   value={inputs.longEdge}
@@ -518,12 +526,12 @@ const InputPanel = ({ inputs, onInputChange }) => {
             }
           }}
         >
-          <CardContent sx={{ px: 3, py: 2.5 }}>
+          <CardContent sx={{ px: { xs: 2, sm: 3 }, py: 2.5 }}>
             <SectionHeader icon={<VolumeIcon />} title={t('monthlySalesTarget')} />
             
-            <Box sx={{ px: 2, mt: 2 }}>
-              <Grid container spacing={3} alignItems="center">
-                <Grid item xs={8}>
+            <Box sx={{ px: { xs: 0, sm: 2 }, mt: 2 }}>
+              <Grid container spacing={2} alignItems="center" direction={isMobile ? "column" : "row"}>
+                <Grid item xs={12} sm={8}>
                   <Slider
                     value={inputs.monthlySalesVolume}
                     onChange={(_, value) => onInputChange('monthlySalesVolume', value)}
@@ -580,7 +588,7 @@ const InputPanel = ({ inputs, onInputChange }) => {
                     }}
                   />
                 </Grid>
-                <Grid item xs={4}>
+                <Grid item xs={12} sm={4}>
                   <TextField
                     value={inputs.monthlySalesVolume}
                     onChange={(e) => handleNumericChange('monthlySalesVolume', e.target.value, 0, 1000)}
@@ -589,7 +597,7 @@ const InputPanel = ({ inputs, onInputChange }) => {
                     inputProps={{ 
                       min: 0, 
                       max: 1000,
-                      style: { textAlign: 'center', fontWeight: '500', fontSize: '1.1rem' }
+                      style: { textAlign: 'center', fontWeight: '500', fontSize: isMobile ? '1rem' : '1.1rem' }
                     }}
                     type="number"
                     size="small"
@@ -659,7 +667,7 @@ const InputPanel = ({ inputs, onInputChange }) => {
             }
           }}
         >
-          <CardContent sx={{ px: 3, py: 2.5 }}>
+          <CardContent sx={{ px: { xs: 2, sm: 3 }, py: 2.5 }}>
             <SectionHeader icon={<PriceIcon />} title={t('priceParameters')} />
             
             <Grid container spacing={2}>

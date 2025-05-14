@@ -9,7 +9,9 @@ import {
   DialogTitle,
   DialogContent,
   IconButton,
-  Button
+  Button,
+  TextField,
+  Grid
 } from '@mui/material';
 import { useLanguage } from '../../context/LanguageContext';
 
@@ -37,32 +39,62 @@ const PrinterInfoPopover = ({ open, anchorEl, handleClose }) => {
         <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 600, color: 'text.primary', mb: 1 }}>
           {t('baseParameters')}
         </Typography>
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, ml: 1 }}>
-          <Typography variant="body2" sx={{ 
-            display: 'flex', 
-            flexDirection: isMobile ? 'column' : 'row',
-            justifyContent: 'space-between', 
-            alignItems: isMobile ? 'flex-start' : 'center',
-            mb: isMobile ? 1 : 0
-          }}>
-            <span style={{ fontWeight: 500 }}>{t('initialInvestment')}:</span> 
-            <span style={{ fontWeight: 600 }}>{language === 'ja' ? `3,780,000${t('currency')}` : `${t('currency')} 3,780,000`}</span>
-          </Typography>
-          <Typography variant="body2" sx={{ 
-            display: 'flex', 
-            flexDirection: isMobile ? 'column' : 'row',
-            justifyContent: 'space-between', 
-            alignItems: isMobile ? 'flex-start' : 'center'
-          }}>
-            <span style={{ fontWeight: 500 }}>{t('printableArea')}:</span> 
-            <span style={{ fontWeight: 600 }}>305mm × 458mm</span>
-          </Typography>
-        </Box>
+        
+        <Grid container spacing={2}>
+          <Grid item xs={12}>
+            <Box sx={{ 
+              display: 'flex', 
+              flexDirection: isMobile ? 'column' : 'row',
+              justifyContent: 'space-between',
+              alignItems: isMobile ? 'flex-start' : 'center',
+              mb: 2
+            }}>
+              <Typography variant="body2" component="span" sx={{ 
+                fontWeight: 500, 
+                mb: isMobile ? 1 : 0,
+                mr: isMobile ? 0 : 2 
+              }}>
+                {t('initialInvestment')}:
+              </Typography>
+              <Typography variant="body2" component="span" sx={{ 
+                fontWeight: 600,
+                wordBreak: 'break-word',
+                maxWidth: '100%' 
+              }}>
+                {language === 'ja' ? `3,780,000${t('currency')}` : `${t('currency')} 3,780,000`}
+              </Typography>
+            </Box>
+          </Grid>
+          
+          <Grid item xs={12}>
+            <Box sx={{ 
+              display: 'flex', 
+              flexDirection: isMobile ? 'column' : 'row',
+              justifyContent: 'space-between',
+              alignItems: isMobile ? 'flex-start' : 'center' 
+            }}>
+              <Typography variant="body2" component="span" sx={{ 
+                fontWeight: 500, 
+                mb: isMobile ? 1 : 0,
+                mr: isMobile ? 0 : 2 
+              }}>
+                {t('printableArea')}:
+              </Typography>
+              <Typography variant="body2" component="span" sx={{ 
+                fontWeight: 600,
+                wordBreak: 'break-word',
+                maxWidth: '100%'
+              }}>
+                305mm × 458mm
+              </Typography>
+            </Box>
+          </Grid>
+        </Grid>
       </Box>
     </>
   );
   
-  // Mobile Dialog version
+  // Mobile Dialog version with improved layout
   if (isMobile) {
     return (
       <Dialog
@@ -75,7 +107,8 @@ const PrinterInfoPopover = ({ open, anchorEl, handleClose }) => {
             margin: '16px',
             width: 'calc(100% - 32px)',
             maxWidth: 'calc(100% - 32px)',
-            borderRadius: '12px'
+            borderRadius: '12px',
+            overflow: 'visible'
           }
         }}
       >
@@ -85,10 +118,15 @@ const PrinterInfoPopover = ({ open, anchorEl, handleClose }) => {
             justifyContent: 'space-between',
             alignItems: 'center', 
             borderBottom: '1px solid rgba(0, 0, 0, 0.1)',
-            pb: 1 
+            pb: 1,
+            pt: 2,
+            px: 2.5
           }}
         >
-          <Typography variant="h6" sx={{ fontWeight: 600 }}>
+          <Typography variant="h6" sx={{ 
+            fontWeight: 600,
+            fontSize: '1.1rem'
+          }}>
             {t('printerSpecifications')}
           </Typography>
           <IconButton 
@@ -103,7 +141,12 @@ const PrinterInfoPopover = ({ open, anchorEl, handleClose }) => {
             <CloseIcon />
           </IconButton>
         </DialogTitle>
-        <DialogContent sx={{ pt: 2 }}>
+        <DialogContent sx={{ 
+          pt: 2.5,
+          pb: 3,
+          px: 2.5,
+          overflow: 'visible' 
+        }}>
           <InfoContent />
           
           <Box sx={{ mt: 3, display: 'flex', justifyContent: 'flex-end' }}>
@@ -112,7 +155,11 @@ const PrinterInfoPopover = ({ open, anchorEl, handleClose }) => {
               variant="contained" 
               color="primary" 
               size="small"
-              sx={{ fontWeight: 500 }}
+              sx={{ 
+                fontWeight: 500,
+                minWidth: '80px',
+                minHeight: '36px'
+              }}
             >
               {t('close') || 'Close'}
             </Button>
@@ -122,7 +169,7 @@ const PrinterInfoPopover = ({ open, anchorEl, handleClose }) => {
     );
   }
   
-  // Desktop Popover version (existing implementation)
+  // Desktop Popover version
   return (
     <Popover
       open={open}
