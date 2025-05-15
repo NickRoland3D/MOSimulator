@@ -439,3 +439,34 @@ canvas {
     min-height: 44px;
   }
 }
+
+/* ... (existing styles) ... */
+
+/* Mobile fixes from your App.css */
+@media (max-width: 600px) {
+  /* ... other mobile styles ... */
+
+  /*
+    This rule targets Material UI components.
+    If PrinterInfoPopover now uses MUI Dialog on mobile, this might be okay.
+    However, !important can sometimes cause specificity issues.
+    Review if this is still needed or if Dialog's fullScreen prop handles it.
+  */
+  .MuiPopover-paper, /* Popover is for desktop, this might not be needed for mobile */
+  .MuiDialog-paper,
+  .MuiDrawer-paper {
+    /* margin: 0 !important; Dialog fullScreen should handle margins */
+    /* max-width: 100% !important; Dialog fullScreen should handle width */
+    /* Consider removing !important if Dialog's fullScreen prop works as expected */
+  }
+
+  /* Ensure buttons in modals are large enough for touch */
+  .MuiDialog-paper button,
+  .MuiDrawer-paper button {
+    min-height: 44px !important; /* Good for touch targets */
+  }
+
+  /* ... rest of your mobile styles ... */
+}
+
+/* ... (rest of your existing styles) ... */

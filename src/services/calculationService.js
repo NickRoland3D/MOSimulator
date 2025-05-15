@@ -2,10 +2,10 @@
  * MO-180 Sales Simulator Calculation Service
  * 
  * This module contains all the core calculation functions for the MO-180 Sales Simulation Tool.
- * Moved from utils to services as part of refactoring.
  */
 
 import { PRINTER_SPECIFICATIONS, UI_CONSTANTS } from '../config/constants';
+import { safeNumber, safeDivide } from '../utils/formatters';
 
 // Get printer constants from configuration
 const { printSpeed: PRINT_SPEED, printableArea: PRINTABLE_AREA } = PRINTER_SPECIFICATIONS;
@@ -20,26 +20,28 @@ const { paybackThresholds } = UI_CONSTANTS;
  * @returns {number} Maximum number of items per print job
  */
 export const calculateItemsPerPrintJob = (shortEdge, longEdge) => {
+  // Convert inputs to safe numbers
+  const safeShortEdge = safeNumber(shortEdge);
+  const safeLongEdge = safeNumber(longEdge);
+  
   // Validate inputs
-  if (shortEdge <= 0 || longEdge <= 0) {
+  if (safeShortEdge <= 0 || safeLongEdge <= 0) {
     return 0;
   }
   
   // Handle case where dimensions exceed printable area
-  if (shortEdge > PRINTABLE_AREA.width && shortEdge > PRINTABLE_AREA.height) {
-    return 0;
-  }
-  if (longEdge > PRINTABLE_AREA.width && longEdge > PRINTABLE_AREA.height) {
+  if ((safeShortEdge > PRINTABLE_AREA.width && safeShortEdge > PRINTABLE_AREA.height) ||
+      (safeLongEdge > PRINTABLE_AREA.width && safeLongEdge > PRINTABLE_AREA.height)) {
     return 0;
   }
   
   // Calculate items in first orientation (short edge along width, long edge along height)
-  const orientation1 = Math.floor(PRINTABLE_AREA.width / shortEdge) * 
-                      Math.floor(PRINTABLE_AREA.height / longEdge);
+  const orientation1 = Math.floor(PRINTABLE_AREA.width / safeShortEdge) * 
+                      Math.floor(PRINTABLE_AREA.height / safeLongEdge);
   
   // Calculate items in second orientation (short edge along height, long edge along width)
-  const orientation2 = Math.floor(PRINTABLE_AREA.width / longEdge) * 
-                      Math.floor(PRINTABLE_AREA.height / shortEdge);
+  const orientation2 = Math.floor(PRINTABLE_AREA.width / safeLongEdge) * 
+                      Math.floor(PRINTABLE_AREA.height / safeShortEdge);
   
   // Return the maximum of the two orientations
   return Math.max(orientation1, orientation2);
@@ -53,13 +55,17 @@ export const calculateItemsPerPrintJob = (shortEdge, longEdge) => {
  * @returns {number} Number of monthly print jobs (rounded up)
  */
 export const calculateMonthlyPrintJobs = (monthlySalesVolume, itemsPerPrintJob) => {
-  // Handle division by zero
-  if (itemsPerPrintJob <= 0) {
+  // Convert inputs to safe numbers
+  const safeVolume = safeNumber(monthlySalesVolume);
+  const safeItems = safeNumber(itemsPerPrintJob);
+  
+  // Handle division by zero or invalid inputs
+  if (safeItems <= 0) {
     return 0;
   }
   
   // Ceil to ensure enough jobs are run
-  return Math.ceil(monthlySalesVolume / itemsPerPrintJob);
+  return Math.ceil(safeVolume / safeItems);
 };
 
 /**
@@ -69,7 +75,8 @@ export const calculateMonthlyPrintJobs = (monthlySalesVolume, itemsPerPrintJob) 
  * @returns {number} Operating hours per month
  */
 export const calculateOperatingHours = (monthlyPrintJobs) => {
-  return monthlyPrintJobs / PRINT_SPEED;
+  // Convert input to safe number and handle division by zero
+  return safeDivide(safeNumber(monthlyPrintJobs), PRINT_SPEED);
 };
 
 /**
@@ -79,8 +86,11 @@ export const calculateOperatingHours = (monthlyPrintJobs) => {
  * @returns {Object} Ink usage in cc for White, CMYK, and Primer
  */
 export const calculateInkUsage = (shortEdge) => {
-  // Calculate scaling factor based on reference point
-  const scale = Math.pow(shortEdge / 65, 2);
+  // Convert input to safe number
+  const safeShortEdge = safeNumber(shortEdge, 1); // Use 1 as fallback to avoid division by zero
+  
+  // Calculate scaling factor based on reference point (avoid division by zero)
+  const scale = Math.pow(safeShortEdge / 65, 2);
   
   // Calculate ink usage based on scaling factor
   return {
@@ -98,8 +108,18 @@ export const calculateInkUsage = (shortEdge) => {
  * @returns {number} Ink cost per unit in JPY
  */
 export const calculateInkCostPerUnit = (inkUsage, inkPricePerCC) => {
-  const totalInkUsage = inkUsage.white + inkUsage.cmyk + inkUsage.primer;
-  return totalInkUsage * inkPricePerCC;
+  if (!inkUsage || typeof inkUsage !== 'object') {
+    return 0;
+  }
+  
+  // Convert inputs to safe numbers
+  const safeWhite = safeNumber(inkUsage.white);
+  const safeCMYK = safeNumber(inkUsage.cmyk);
+  const safePrimer = safeNumber(inkUsage.primer);
+  const safePrice = safeNumber(inkPricePerCC);
+  
+  const totalInkUsage = safeWhite + safeCMYK + safePrimer;
+  return totalInkUsage * safePrice;
 };
 
 /**
@@ -110,12 +130,13 @@ export const calculateInkCostPerUnit = (inkUsage, inkPricePerCC) => {
  * @returns {number} Labor cost per unit in JPY
  */
 export const calculateLaborCostPerUnit = (laborCostPerHour, itemsPerPrintJob) => {
-  // Handle division by zero
-  if (itemsPerPrintJob <= 0) {
-    return 0;
-  }
+  // Convert inputs to safe numbers
+  const safeLaborCost = safeNumber(laborCostPerHour);
+  const safeItems = safeNumber(itemsPerPrintJob);
   
-  return (laborCostPerHour / PRINT_SPEED) / itemsPerPrintJob;
+  // Use safe division to handle division by zero
+  const printJobCost = safeDivide(safeLaborCost, PRINT_SPEED);
+  return safeDivide(printJobCost, safeItems);
 };
 
 /**
@@ -127,7 +148,12 @@ export const calculateLaborCostPerUnit = (laborCostPerHour, itemsPerPrintJob) =>
  * @returns {number} Total cost per unit in JPY
  */
 export const calculateCostPerUnit = (materialCostPerUnit, inkCostPerUnit, laborCostPerUnit) => {
-  return materialCostPerUnit + inkCostPerUnit + laborCostPerUnit;
+  // Convert inputs to safe numbers
+  const safeMaterialCost = safeNumber(materialCostPerUnit);
+  const safeInkCost = safeNumber(inkCostPerUnit);
+  const safeLaborCost = safeNumber(laborCostPerUnit);
+  
+  return safeMaterialCost + safeInkCost + safeLaborCost;
 };
 
 /**
@@ -138,7 +164,11 @@ export const calculateCostPerUnit = (materialCostPerUnit, inkCostPerUnit, laborC
  * @returns {number} Monthly sales in JPY
  */
 export const calculateMonthlySales = (salesPricePerUnit, monthlySalesVolume) => {
-  return salesPricePerUnit * monthlySalesVolume;
+  // Convert inputs to safe numbers
+  const safePrice = safeNumber(salesPricePerUnit);
+  const safeVolume = safeNumber(monthlySalesVolume);
+  
+  return safePrice * safeVolume;
 };
 
 /**
@@ -150,7 +180,12 @@ export const calculateMonthlySales = (salesPricePerUnit, monthlySalesVolume) => 
  * @returns {number} Monthly gross profit in JPY
  */
 export const calculateMonthlyGrossProfit = (salesPricePerUnit, costPerUnit, monthlySalesVolume) => {
-  return (salesPricePerUnit - costPerUnit) * monthlySalesVolume;
+  // Convert inputs to safe numbers
+  const safePrice = safeNumber(salesPricePerUnit);
+  const safeCost = safeNumber(costPerUnit);
+  const safeVolume = safeNumber(monthlySalesVolume);
+  
+  return (safePrice - safeCost) * safeVolume;
 };
 
 /**
@@ -161,12 +196,12 @@ export const calculateMonthlyGrossProfit = (salesPricePerUnit, costPerUnit, mont
  * @returns {number} Gross profit margin as a percentage
  */
 export const calculateGrossProfitMargin = (salesPricePerUnit, costPerUnit) => {
-  // Handle division by zero
-  if (salesPricePerUnit <= 0) {
-    return 0;
-  }
+  // Convert inputs to safe numbers
+  const safePrice = safeNumber(salesPricePerUnit);
+  const safeCost = safeNumber(costPerUnit);
   
-  return ((salesPricePerUnit - costPerUnit) / salesPricePerUnit) * 100;
+  // Handle division by zero using safe division
+  return safeDivide((safePrice - safeCost), safePrice, 0) * 100;
 };
 
 /**
@@ -177,12 +212,16 @@ export const calculateGrossProfitMargin = (salesPricePerUnit, costPerUnit) => {
  * @returns {number|string} Payback period in months or '-' if no profit
  */
 export const calculatePaybackPeriod = (monthlyGrossProfit, initialInvestment) => {
+  // Convert inputs to safe numbers
+  const safeProfit = safeNumber(monthlyGrossProfit);
+  const safeInvestment = safeNumber(initialInvestment);
+  
   // Handle no profit case
-  if (monthlyGrossProfit <= 0) {
+  if (safeProfit <= 0) {
     return '-';
   }
   
-  return initialInvestment / monthlyGrossProfit;
+  return safeDivide(safeInvestment, safeProfit, '-');
 };
 
 /**
@@ -192,6 +231,15 @@ export const calculatePaybackPeriod = (monthlyGrossProfit, initialInvestment) =>
  * @returns {Object} Complete calculation results
  */
 export const calculateResults = (inputs) => {
+  // Performance tracking
+  const startTime = performance.now();
+  
+  // Handle null or undefined inputs
+  if (!inputs) {
+    console.error('Invalid inputs provided to calculation service');
+    return null;
+  }
+  
   const {
     shortEdge,
     longEdge,
@@ -203,50 +251,79 @@ export const calculateResults = (inputs) => {
     initialInvestment = PRINTER_SPECIFICATIONS.initialInvestment // Use default if not provided
   } = inputs;
   
-  // Calculate intermediate values
-  const itemsPerPrintJob = calculateItemsPerPrintJob(shortEdge, longEdge);
-  const monthlyPrintJobs = calculateMonthlyPrintJobs(monthlySalesVolume, itemsPerPrintJob);
-  const operatingHours = calculateOperatingHours(monthlyPrintJobs);
-  const inkUsage = calculateInkUsage(shortEdge);
-  const inkCostPerUnit = calculateInkCostPerUnit(inkUsage, inkPricePerCC);
-  const laborCostPerUnit = calculateLaborCostPerUnit(laborCostPerHour, itemsPerPrintJob);
-  
-  // Calculate final results
-  const costPerUnit = calculateCostPerUnit(materialCostPerUnit, inkCostPerUnit, laborCostPerUnit);
-  const monthlySales = calculateMonthlySales(salesPricePerUnit, monthlySalesVolume);
-  const monthlyGrossProfit = calculateMonthlyGrossProfit(salesPricePerUnit, costPerUnit, monthlySalesVolume);
-  const grossProfitMargin = calculateGrossProfitMargin(salesPricePerUnit, costPerUnit);
-  const paybackPeriod = calculatePaybackPeriod(monthlyGrossProfit, initialInvestment);
-  
-  // Format ink usage to 2 decimal places
-  const formattedInkUsage = {
-    white: parseFloat(inkUsage.white.toFixed(2)),
-    cmyk: parseFloat(inkUsage.cmyk.toFixed(2)),
-    primer: parseFloat(inkUsage.primer.toFixed(2))
-  };
-  
-  // Pass original inputs back in results for chart components and other uses
-  return {
-    itemsPerPrintJob,
-    monthlyPrintJobs,
-    operatingHours,
-    inkUsage: formattedInkUsage,
-    inkCostPerUnit,
-    laborCostPerUnit,
-    materialCostPerUnit,
-    costPerUnit,
-    monthlySales,
-    monthlyGrossProfit,
-    grossProfitMargin,
-    paybackPeriod,
-    initialInvestment, // Include the initial investment value
-    inputs // Include original inputs
-  };
+  try {
+    // Calculate intermediate values
+    const itemsPerPrintJob = calculateItemsPerPrintJob(shortEdge, longEdge);
+    const monthlyPrintJobs = calculateMonthlyPrintJobs(monthlySalesVolume, itemsPerPrintJob);
+    const operatingHours = calculateOperatingHours(monthlyPrintJobs);
+    const inkUsage = calculateInkUsage(shortEdge);
+    const inkCostPerUnit = calculateInkCostPerUnit(inkUsage, inkPricePerCC);
+    const laborCostPerUnit = calculateLaborCostPerUnit(laborCostPerHour, itemsPerPrintJob);
+    
+    // Calculate final results
+    const costPerUnit = calculateCostPerUnit(materialCostPerUnit, inkCostPerUnit, laborCostPerUnit);
+    const monthlySales = calculateMonthlySales(salesPricePerUnit, monthlySalesVolume);
+    const monthlyGrossProfit = calculateMonthlyGrossProfit(salesPricePerUnit, costPerUnit, monthlySalesVolume);
+    const grossProfitMargin = calculateGrossProfitMargin(salesPricePerUnit, costPerUnit);
+    const paybackPeriod = calculatePaybackPeriod(monthlyGrossProfit, initialInvestment);
+    
+    // Format ink usage to 2 decimal places
+    const formattedInkUsage = {
+      white: parseFloat(inkUsage.white.toFixed(2)),
+      cmyk: parseFloat(inkUsage.cmyk.toFixed(2)),
+      primer: parseFloat(inkUsage.primer.toFixed(2))
+    };
+    
+    // Log performance
+    const endTime = performance.now();
+    console.log(`Calculation completed in ${(endTime - startTime).toFixed(2)}ms`);
+    
+    // Pass original inputs back in results for chart components and other uses
+    return {
+      itemsPerPrintJob,
+      monthlyPrintJobs,
+      operatingHours,
+      inkUsage: formattedInkUsage,
+      inkCostPerUnit,
+      laborCostPerUnit,
+      materialCostPerUnit,
+      costPerUnit,
+      monthlySales,
+      monthlyGrossProfit,
+      grossProfitMargin,
+      paybackPeriod,
+      initialInvestment, // Include the initial investment value
+      inputs // Include original inputs
+    };
+  } catch (error) {
+    console.error('Error in calculation service:', error);
+    // Return default/fallback values in case of error
+    return {
+      itemsPerPrintJob: 0,
+      monthlyPrintJobs: 0,
+      operatingHours: 0,
+      inkUsage: { white: 0, cmyk: 0, primer: 0 },
+      inkCostPerUnit: 0,
+      laborCostPerUnit: 0,
+      materialCostPerUnit: safeNumber(materialCostPerUnit),
+      costPerUnit: safeNumber(materialCostPerUnit),
+      monthlySales: 0,
+      monthlyGrossProfit: 0,
+      grossProfitMargin: 0,
+      paybackPeriod: '-',
+      initialInvestment: safeNumber(initialInvestment),
+      inputs
+    };
+  }
 };
 
-// Export a payback period status function for UI color coding
+/**
+ * Get payback period status for UI color coding
+ * @param {number|string} paybackPeriod - Payback period in months or '-' for no profit
+ * @returns {string} - Status code ('good', 'average', 'warning', or 'no-profit')
+ */
 export const getPaybackStatus = (paybackPeriod) => {
-  if (paybackPeriod === '-') {
+  if (paybackPeriod === '-' || paybackPeriod === undefined || paybackPeriod === null) {
     return 'no-profit';
   } else if (paybackPeriod <= paybackThresholds.good) {
     return 'good';

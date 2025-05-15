@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useMemo, useCallback } from 'react';
-import { Box, Typography } from '@mui/material';
+import { Box, Typography, useMediaQuery } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
 import { useLanguage } from '../../context/LanguageContext';
 
 /**
@@ -7,6 +8,8 @@ import { useLanguage } from '../../context/LanguageContext';
  * Modern minimal gauge with rounded lines and pastel colors
  */
 const PaybackGauge = ({ paybackPeriod }) => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const { t } = useLanguage(); // Get translation function
   const canvasRef = useRef(null);
   
@@ -45,8 +48,8 @@ const PaybackGauge = ({ paybackPeriod }) => {
     const centerX = width / 2;
     const centerY = height * 0.55; // Position gauge in the middle
     
-    // Gauge radius
-    const radius = Math.min(centerX, centerY) * 0.85;
+    // Gauge radius - smaller on mobile
+    const radius = Math.min(centerX, centerY) * (isMobile ? 0.8 : 0.85);
     
     // Gauge angles
     const startAngle = Math.PI;        // 180 degrees (left)
@@ -54,7 +57,7 @@ const PaybackGauge = ({ paybackPeriod }) => {
     const totalAngle = endAngle - startAngle;
     
     // Gauge thickness
-    const thickness = radius * 0.2;
+    const thickness = radius * (isMobile ? 0.25 : 0.2);
     
     // Draw a light gray circle border around the gauge
     ctx.beginPath();
@@ -81,9 +84,9 @@ const PaybackGauge = ({ paybackPeriod }) => {
     drawGaugeSegment(0.2, 0.4, colors.average); // Peach (12-24 months)
     drawGaugeSegment(0.4, 1, colors.warning);  // Pink (24-60 months)
     
-    // Draw minimal labels
+    // Draw minimal labels - smaller for mobile
     ctx.fillStyle = '#757575';
-    ctx.font = '12px Arial';
+    ctx.font = isMobile ? '10px Arial' : '12px Arial';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     
@@ -101,8 +104,8 @@ const PaybackGauge = ({ paybackPeriod }) => {
       const angle = startAngle + (percent * totalAngle);
       
       // Draw label
-      const labelX = centerX + (radius + 15) * Math.cos(angle);
-      const labelY = centerY + (radius + 15) * Math.sin(angle);
+      const labelX = centerX + (radius + (isMobile ? 10 : 15)) * Math.cos(angle);
+      const labelY = centerY + (radius + (isMobile ? 10 : 15)) * Math.sin(angle);
       
       // Set label color
       ctx.fillStyle = labelColors[i];
@@ -124,21 +127,21 @@ const PaybackGauge = ({ paybackPeriod }) => {
       centerX + needleLength * Math.cos(needleAngle),
       centerY + needleLength * Math.sin(needleAngle)
     );
-    ctx.lineWidth = 8;
+    ctx.lineWidth = isMobile ? 6 : 8;
     ctx.lineCap = 'round';
     ctx.strokeStyle = needleColor;
     ctx.stroke();
     
     // Draw blue circular pivot point
     ctx.beginPath();
-    ctx.arc(centerX, centerY, 8, 0, Math.PI * 2);
+    ctx.arc(centerX, centerY, isMobile ? 6 : 8, 0, Math.PI * 2);
     ctx.fillStyle = '#64b5f6'; // Light blue
     ctx.strokeStyle = '#ffffff';
     ctx.lineWidth = 2;
     ctx.fill();
     ctx.stroke();
     
-  }, [paybackPeriod, noProfitCase, colors, getValueColor]);
+  }, [paybackPeriod, noProfitCase, colors, getValueColor, isMobile]);
   
   return (
     <Box sx={{ 
@@ -147,16 +150,16 @@ const PaybackGauge = ({ paybackPeriod }) => {
       display: 'flex', 
       flexDirection: 'column', 
       alignItems: 'center',
-      py: 2
+      py: isMobile ? 1 : 2
     }}>
-      <Typography variant="h6" align="center" gutterBottom>
+      <Typography variant={isMobile ? "subtitle1" : "h6"} align="center" gutterBottom>
         {t('investmentPaybackPeriod')}
       </Typography>
       
       <Box sx={{ 
         position: 'relative', 
         width: '100%', 
-        height: '200px', 
+        height: isMobile ? '160px' : '200px', 
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
@@ -167,20 +170,20 @@ const PaybackGauge = ({ paybackPeriod }) => {
       
       {/* Value display - large, colored, and centered */}
       <Typography
-        variant="h3"
+        variant={isMobile ? "h4" : "h3"}
         align="center"
         sx={{
           fontWeight: 'bold',
           color: getValueColor(),
-          mt: -2,
-          mb: 1
+          mt: isMobile ? -1 : -2,
+          mb: isMobile ? 0.5 : 1
         }}
       >
         {noProfitCase ? '-' : `${paybackPeriod.toFixed(1)} ${t('months')}`}
       </Typography>
       
       <Typography 
-        variant="body1" 
+        variant={isMobile ? "body2" : "body1"}
         align="center" 
         color="text.secondary"
         sx={{ fontWeight: 500 }}

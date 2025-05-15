@@ -1,18 +1,24 @@
 import React, { useEffect, useRef, useCallback } from 'react';
-import { Box } from '@mui/material';
+import { Box, useMediaQuery } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import { useLanguage } from '../../../context/LanguageContext';
 
 const ProfitVolumeChart = ({ salesPricePerUnit, costPerUnit, currentVolume }) => {
   const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const { t, language } = useLanguage();
   const canvasRef = useRef(null);
   const chartInstanceRef = useRef({ 
     ctx: null, 
     width: 0, 
     height: 0, 
-    // Increased left padding for Y-axis labels to fix overlap issue
-    padding: { left: 100, right: 30, top: 60, bottom: 70 }, 
+    // Adjusted padding for mobile view
+    padding: { 
+      left: 0, 
+      right: 0, 
+      top: 0, 
+      bottom: 0 
+    }, 
     maxVolume: 1000,
     niceMaxProfit: 0,
     yStep: 0,
@@ -22,6 +28,16 @@ const ProfitVolumeChart = ({ salesPricePerUnit, costPerUnit, currentVolume }) =>
 
   const profitPerUnit = salesPricePerUnit - costPerUnit;
   chartInstanceRef.current.profitPerUnit = profitPerUnit; // Store for use in draw functions
+
+  // Update padding based on screen size
+  useEffect(() => {
+    const chart = chartInstanceRef.current;
+    if (isMobile) {
+      chart.padding = { left: 70, right: 20, top: 50, bottom: 65 };
+    } else {
+      chart.padding = { left: 100, right: 30, top: 60, bottom: 70 };
+    }
+  }, [isMobile]);
 
   const formatCurrency = useCallback((amount, short = false) => {
     if (typeof amount !== 'number' || isNaN(amount)) return 'N/A';
@@ -80,13 +96,13 @@ const ProfitVolumeChart = ({ salesPricePerUnit, costPerUnit, currentVolume }) =>
     ctx.fillRect(0, 0, width, height);
     
     // Draw chart title at the top
-    ctx.font = 'bold 14px sans-serif';
+    ctx.font = `bold ${isMobile ? '12px' : '14px'} sans-serif`;
     ctx.fillStyle = '#333333';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'top';
     const chartTitle = language === 'ja' ? '利益と販売量の関係' : 'Profit vs. Sales Volume';
-    ctx.fillText(chartTitle, width / 2, 20);
-  }, [language]);
+    ctx.fillText(chartTitle, width / 2, isMobile ? 10 : 20);
+  }, [language, isMobile]);
 
   const drawGridAndAxes = useCallback(() => {
     const chart = chartInstanceRef.current;
@@ -97,8 +113,9 @@ const ProfitVolumeChart = ({ salesPricePerUnit, costPerUnit, currentVolume }) =>
     ctx.strokeStyle = '#e0e0e0';
     ctx.lineWidth = 1;
 
-    // Vertical grid lines
-    for (let i = 0; i <= maxVolume; i += 100) {
+    // Vertical grid lines (reduce frequency on mobile)
+    const xStep = isMobile ? 200 : 100;
+    for (let i = 0; i <= maxVolume; i += xStep) {
       const x = toCanvasX(i);
       ctx.moveTo(x, padding.top);
       ctx.lineTo(x, height - padding.bottom);
@@ -125,7 +142,7 @@ const ProfitVolumeChart = ({ salesPricePerUnit, costPerUnit, currentVolume }) =>
     ctx.moveTo(padding.left, padding.top); // Y-axis
     ctx.lineTo(padding.left, height - padding.bottom);
     ctx.stroke();
-  }, [toCanvasX, toCanvasY]);
+  }, [toCanvasX, toCanvasY, isMobile]);
 
   const drawLabelsAndTitles = useCallback(() => {
     const chart = chartInstanceRef.current;
@@ -135,26 +152,31 @@ const ProfitVolumeChart = ({ salesPricePerUnit, costPerUnit, currentVolume }) =>
     ctx.textAlign = 'right';
     ctx.textBaseline = 'middle';
     ctx.fillStyle = '#555555'; // Darker for better readability
-    ctx.font = '11px sans-serif';
+    ctx.font = `${isMobile ? '10px' : '11px'} sans-serif`;
 
-    for (let i = niceMinProfit; i <= niceMaxProfit; i += yStep) {
-       if ((niceMaxProfit - niceMinProfit) / yStep > 20 && i !== 0 && i !== niceMinProfit && i !== niceMaxProfit) {
-          if (i % (yStep * 2) !== 0 && i !== 0) continue;
+    // Use fewer labels on mobile
+    const yLabelStep = isMobile ? yStep * 2 : yStep;
+    
+    for (let i = niceMinProfit; i <= niceMaxProfit; i += yLabelStep) {
+       if ((niceMaxProfit - niceMinProfit) / yLabelStep > 20 && i !== 0 && i !== niceMinProfit && i !== niceMaxProfit) {
+          if (i % (yLabelStep * 2) !== 0 && i !== 0) continue;
       }
       const y = toCanvasY(i);
       ctx.fillText(formatCurrency(i, true), padding.left - 10, y);
     }
 
-    // X-axis labels
+    // X-axis labels - fewer labels on mobile
     ctx.textAlign = 'center';
     ctx.textBaseline = 'top';
-    for (let i = 0; i <= maxVolume; i += (maxVolume >= 500 ? 100 : 50)) { // Adjust step for smaller maxVolume if needed
+    const xLabelStep = isMobile ? (maxVolume >= 500 ? 200 : 100) : (maxVolume >= 500 ? 100 : 50);
+    
+    for (let i = 0; i <= maxVolume; i += xLabelStep) {
       const x = toCanvasX(i);
       ctx.fillText(i.toString(), x, height - padding.bottom + 8);
     }
 
     // Axis titles
-    ctx.font = 'bold 12px sans-serif';
+    ctx.font = `bold ${isMobile ? '10px' : '12px'} sans-serif`;
     ctx.fillStyle = '#333333';
     ctx.textAlign = 'center';
     
@@ -162,19 +184,19 @@ const ProfitVolumeChart = ({ salesPricePerUnit, costPerUnit, currentVolume }) =>
     const xAxisTitle = language === 'ja' ? '月間販売量 (個)' : 'Monthly Sales Volume (units)';
     ctx.fillText(xAxisTitle, 
                  padding.left + (width - padding.left - padding.right) / 2, 
-                 height - padding.bottom + 30);
+                 height - padding.bottom + (isMobile ? 22 : 30));
 
     // Y-axis title - Use default text if translation key fails
     const yAxisTitle = language === 'ja' ? '月間利益 (円)' : 'Monthly Profit (JPY)';
     ctx.save();
     // Moved position further left to avoid overlap with Y-axis labels
     // Position at 15 pixels from the left edge of the canvas
-    ctx.translate(15, padding.top + (height - padding.top - padding.bottom) / 2);
+    ctx.translate(isMobile ? 10 : 15, padding.top + (height - padding.top - padding.bottom) / 2);
     ctx.rotate(-Math.PI / 2);
     ctx.textAlign = 'center';
     ctx.fillText(yAxisTitle, 0, 0);
     ctx.restore();
-  }, [toCanvasX, toCanvasY, formatCurrency, language]);
+  }, [toCanvasX, toCanvasY, formatCurrency, language, isMobile]);
 
   const drawProfitLine = useCallback(() => {
     const chart = chartInstanceRef.current;
@@ -215,22 +237,23 @@ const ProfitVolumeChart = ({ salesPricePerUnit, costPerUnit, currentVolume }) =>
 
     // Point
     ctx.beginPath();
-    ctx.arc(pointX, pointY, 5, 0, Math.PI * 2);
+    ctx.arc(pointX, pointY, isMobile ? 4 : 5, 0, Math.PI * 2);
     ctx.fillStyle = theme.palette.cmyk?.yellow || '#FFD700';
     ctx.fill();
     ctx.strokeStyle = '#555555';
     ctx.lineWidth = 1.5;
     ctx.stroke();
 
-    // Tooltip
+    // Tooltip - simplified for mobile
     const volumeLabel = language === 'ja' ? '販売量' : 'Volume';
     const profitLabel = language === 'ja' ? '利益' : 'Profit';
     const tooltipText = `${volumeLabel}: ${volume}, ${profitLabel}: ${formatCurrency(profit)}`;
 
-    ctx.font = 'bold 11px sans-serif';
+    // Smaller font on mobile
+    ctx.font = `bold ${isMobile ? '10px' : '11px'} sans-serif`;
     const textWidth = ctx.measureText(tooltipText).width;
     const tooltipWidth = Math.max(textWidth) + 20;
-    const tooltipHeight = 30; // For one line of text
+    const tooltipHeight = isMobile ? 24 : 30; // Smaller height on mobile
     
     let tooltipX = pointX + 15;
     let tooltipY = pointY - 15 - tooltipHeight;
@@ -241,6 +264,12 @@ const ProfitVolumeChart = ({ salesPricePerUnit, costPerUnit, currentVolume }) =>
     }
     if (tooltipY < chart.padding.top) {
       tooltipY = pointY + 15;
+    }
+
+    // If tooltip still goes out of bounds on mobile, position it at the top right corner
+    if (isMobile && (tooltipX < 0 || tooltipX + tooltipWidth > chart.width || tooltipY < 0 || tooltipY + tooltipHeight > chart.height)) {
+      tooltipX = chart.width - tooltipWidth - 10; 
+      tooltipY = chart.padding.top + 10;
     }
 
     ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
@@ -256,7 +285,7 @@ const ProfitVolumeChart = ({ salesPricePerUnit, costPerUnit, currentVolume }) =>
     ctx.textBaseline = 'middle';
     ctx.fillText(tooltipText, tooltipX + 10, tooltipY + tooltipHeight / 2);
 
-  }, [toCanvasX, toCanvasY, formatCurrency, theme.palette.cmyk?.yellow, language]);
+  }, [toCanvasX, toCanvasY, formatCurrency, theme.palette.cmyk?.yellow, language, isMobile]);
 
 
   // Main drawing effect
@@ -296,8 +325,8 @@ const ProfitVolumeChart = ({ salesPricePerUnit, costPerUnit, currentVolume }) =>
         chart.niceMaxProfit = chart.niceMinProfit + calculateNiceStep(Math.abs(chart.niceMinProfit) || 100000);
     }
 
-    chart.yStep = calculateNiceStep(chart.niceMaxProfit - chart.niceMinProfit, 5);
-    if (chart.yStep === 0) chart.yStep = (chart.niceMaxProfit - chart.niceMinProfit) / 5 || 1;
+    chart.yStep = calculateNiceStep(chart.niceMaxProfit - chart.niceMinProfit, isMobile ? 3 : 5);
+    if (chart.yStep === 0) chart.yStep = (chart.niceMaxProfit - chart.niceMinProfit) / (isMobile ? 3 : 5) || 1;
 
 
     // --- Main Draw Function (Static Elements) ---
@@ -368,10 +397,41 @@ const ProfitVolumeChart = ({ salesPricePerUnit, costPerUnit, currentVolume }) =>
     };
     canvas.addEventListener('mouseleave', handleMouseLeave);
 
+    // Touch handler for mobile
+    const handleTouch = (e) => {
+      if (e.touches && e.touches[0]) {
+        const touch = e.touches[0];
+        const rect = canvas.getBoundingClientRect();
+        const touchX = touch.clientX - rect.left;
+        const touchY = touch.clientY - rect.top;
+        const { padding, width, height, maxVolume, profitPerUnit } = chartInstanceRef.current;
 
+        if (touchX >= padding.left && touchX <= width - padding.right &&
+            touchY >= padding.top && touchY <= height - padding.bottom) {
+          
+          const volume = Math.max(0, Math.min(maxVolume, Math.round(((touchX - padding.left) / (width - padding.left - padding.right)) * maxVolume)));
+          const profit = volume * profitPerUnit;
+
+          // Redraw static parts, then the new touch point
+          drawStaticChart();
+          chartInstanceRef.current.currentHoverData = { volume, profit, isCurrentVolumePoint: false };
+          drawTooltipAndPoint(volume, profit);
+          
+          // Prevent scrolling while interacting with the chart
+          e.preventDefault();
+        }
+      }
+    };
+
+    canvas.addEventListener('touchstart', handleTouch, { passive: false });
+    canvas.addEventListener('touchmove', handleTouch, { passive: false });
+
+    // Remove touch listeners on cleanup
     return () => {
       canvas.removeEventListener('mousemove', handleMouseMove);
       canvas.removeEventListener('mouseleave', handleMouseLeave);
+      canvas.removeEventListener('touchstart', handleTouch);
+      canvas.removeEventListener('touchmove', handleTouch);
     };
 
   }, [
@@ -381,16 +441,25 @@ const ProfitVolumeChart = ({ salesPricePerUnit, costPerUnit, currentVolume }) =>
     theme, // theme.palette.cmyk.yellow is used
     language, t, // For localization in formatCurrency and titles
     formatCurrency, calculateNiceStep, toCanvasX, toCanvasY, // Memoized helpers
-    drawBackground, drawGridAndAxes, drawLabelsAndTitles, drawProfitLine, drawTooltipAndPoint // Memoized draw functions
+    drawBackground, drawGridAndAxes, drawLabelsAndTitles, drawProfitLine, drawTooltipAndPoint, // Memoized draw functions
+    isMobile // Added isMobile dependency
   ]);
+  
+  // Dynamic aspect ratio for mobile
+  const aspectRatio = isMobile ? '4 / 3' : '16 / 9';
   
   return (
     <Box sx={{ width: '100%', height: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-      <Box sx={{ width: '100%', maxWidth: '600px', aspectRatio: '16 / 9', mb: 2 }}> 
+      <Box sx={{ 
+        width: '100%', 
+        maxWidth: isMobile ? '100%' : '600px', 
+        aspectRatio: aspectRatio, 
+        mb: 2 
+      }}> 
         <canvas 
             ref={canvasRef} 
             width={600}  /* Base width */
-            height={337.5} /* Base height for 16:9 */
+            height={isMobile ? 450 : 337.5} /* Adjusted height for mobile */
             style={{ display: 'block', width: '100%', height: '100%'}} 
         />
       </Box>

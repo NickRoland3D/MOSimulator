@@ -1,9 +1,12 @@
+// MO Simulator 2/src/features/simulation/SimulationForm.js
+// OR MO Simulator 2/src/components/InputPanel/InputPanel.js
+
 import React, { useState } from 'react';
-import { 
-  Box, 
-  Typography, 
-  TextField, 
-  Slider, 
+import {
+  Box,
+  Typography,
+  TextField,
+  Slider,
   Grid,
   InputAdornment,
   Card,
@@ -11,11 +14,18 @@ import {
   Tooltip,
   Button,
   Fade,
-  useMediaQuery,
-  useTheme
+  useMediaQuery // If not already imported
 } from '@mui/material';
+import { useTheme } from '@mui/material/styles'; // If not already imported
 import { useLanguage } from '../../context/LanguageContext';
+// Correct the path based on your project structure
+// Option 1: If PrinterInfoPopover is in './components/' relative to SimulationForm
 import PrinterInfoPopover from './PrinterInfoPopover';
+// Option 2: If InputPanel.js is calling PrinterInfoPopover from the same directory
+// import PrinterInfoPopover from './PrinterInfoPopover';
+
+
+// ... (rest of your existing imports for DimensionsIcon, PriceIcon, VolumeIcon, InfoIcon)
 
 // Using SVG icons directly instead of emojis to match the design
 const DimensionsIcon = () => (
@@ -56,69 +66,89 @@ const InfoIcon = () => (
   </svg>
 );
 
+
 /**
- * Input Panel Component
+ * SimulationForm Component / InputPanel Component
  * Handles user inputs for the simulation with enhanced styling and improved aesthetics
  */
-const InputPanel = ({ inputs, onInputChange }) => {
+const SimulationForm = ({ inputs, onInputChange }) => { // Or InputPanel
   const theme = useTheme();
-  const { t } = useLanguage(); // Get translation function
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const { t, language } = useLanguage();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm')); // For responsive styling
   const isExtraSmallMobile = useMediaQuery('(max-width:380px)');
-  
-  // State for printer info popover
+
+
   const [infoAnchorEl, setInfoAnchorEl] = useState(null);
   const infoPopoverOpen = Boolean(infoAnchorEl);
-  
-  // State to track which input is focused for accent colors
+
   const [focusedInput, setFocusedInput] = useState(null);
-  
-  // State for editable dimension values
   const [editingDimension, setEditingDimension] = useState(null);
   const [tempDimensionValue, setTempDimensionValue] = useState("");
-  
-  // Handle info icon click
+
   const handleInfoClick = (event) => {
     setInfoAnchorEl(event.currentTarget);
   };
-  
-  // Handle info popover close
+
   const handleInfoClose = () => {
     setInfoAnchorEl(null);
   };
-  
-  // Handle numeric input changes with validation
+
+  // This function will be passed to PrinterInfoPopover
+  // It calls the onInputChange from props, which ultimately updates the useSimulation hook
+  const handleInitialInvestmentChange = (value) => {
+    onInputChange('initialInvestment', value);
+  };
+
   const handleNumericChange = (name, value, min, max) => {
-    // Parse value as number
-    const numValue = parseFloat(value);
-    
-    // Validate number is within range
+    const rawValue = value.toString().replace(/,/g, '');
+     if (rawValue === '') {
+      onInputChange(name, ''); // Allow clearing the field
+      return;
+    }
+    const numValue = parseFloat(rawValue);
     if (!isNaN(numValue) && (min === undefined || numValue >= min) && (max === undefined || numValue <= max)) {
       onInputChange(name, numValue);
-    }
-  };
-  
-  // Handle stepper button clicks
-  const handleStepperClick = (name, step, min, max) => {
-    const currentValue = inputs[name];
-    const newValue = currentValue + step;
-    
-    // Validate the new value is within range
-    if ((min === undefined || newValue >= min) && (max === undefined || newValue <= max)) {
-      onInputChange(name, newValue);
+    } else if (isNaN(numValue) && rawValue.length > 0) {
+      // If it's not a number but not empty, perhaps keep the last valid value or an empty string
+      // For now, we'll just not update if invalid and not empty
+    } else if (rawValue.length === 0) {
+       onInputChange(name, ''); // explicitly set to empty
     }
   };
 
-  // Handle focus and blur events for accent colors
+  const handleStepperClick = (name, step, min, max) => {
+    const currentValue = parseFloat(inputs[name]) || 0; // Ensure current value is a number
+    let newValue = currentValue + step;
+
+    if (min !== undefined) newValue = Math.max(min, newValue);
+    if (max !== undefined) newValue = Math.min(max, newValue);
+
+    onInputChange(name, newValue);
+  };
+
+
   const handleFocus = (name) => {
     setFocusedInput(name);
   };
-  
-  const handleBlur = () => {
+
+  const handleBlur = (name) => { // Added name to correctly reset specific input if needed
     setFocusedInput(null);
+    // Ensure values are valid numbers on blur for inputs that allow direct typing
+    const numericFields = ['salesPricePerUnit', 'materialCostPerUnit', 'laborCostPerHour', 'inkPricePerCC', 'monthlySalesVolume'];
+    if (numericFields.includes(name)) {
+        const currentValue = inputs[name];
+        if (currentValue === '' || isNaN(parseFloat(currentValue))) {
+            // Find the default for this field, or set to 0 if not crucial
+            // For simplicity here, let's ensure it's at least 0 if it was meant to be a number
+            // A more robust solution would be to use default values from constants.js
+            const defaults = {
+                salesPricePerUnit: 0, materialCostPerUnit: 0, laborCostPerHour: 0, inkPricePerCC: 0, monthlySalesVolume: 0
+            };
+            onInputChange(name, defaults[name]);
+        }
+    }
   };
 
-  // Handle dimension editing
   const startEditingDimension = (name, currentValue) => {
     setEditingDimension(name);
     setTempDimensionValue(currentValue.toString());
@@ -132,6 +162,9 @@ const InputPanel = ({ inputs, onInputChange }) => {
     const value = parseInt(tempDimensionValue, 10);
     if (!isNaN(value) && value >= min && value <= max) {
       onInputChange(name, value);
+    } else {
+      // Revert to original value if input is invalid
+      setTempDimensionValue(inputs[name].toString());
     }
     setEditingDimension(null);
   };
@@ -139,30 +172,31 @@ const InputPanel = ({ inputs, onInputChange }) => {
   const handleDimensionKeyDown = (e, name, min, max) => {
     if (e.key === 'Enter') {
       finishEditingDimension(name, min, max);
+      e.target.blur();
     } else if (e.key === 'Escape') {
+      setTempDimensionValue(inputs[name].toString()); // Revert on escape
       setEditingDimension(null);
+      e.target.blur();
     }
   };
-  
-  // Accent color for active input based on input type
+
   const getFocusBorderColor = (name) => {
     if (name === focusedInput) {
       if (name.includes('Edge')) return theme.palette.primary.main;
       if (name.includes('Price') || name.includes('Cost')) return theme.palette.primary.main;
       return theme.palette.primary.main;
     }
-    return 'transparent';
+    return 'transparent'; // This was 'transparent', might need to be theme.palette.divider or similar
   };
 
-  // Section header with icon
   const SectionHeader = ({ icon, title }) => (
     <Box sx={{ display: 'flex', alignItems: 'center', mb: 2.5 }}>
-      <Box sx={{ 
-        mr: 1.5, 
-        color: 'primary.main', 
-        display: 'flex', 
+      <Box sx={{
+        mr: 1.5,
+        color: 'primary.main',
+        display: 'flex',
         alignItems: 'center',
-        justifyContent: 'center' 
+        justifyContent: 'center'
       }}>
         {icon}
       </Box>
@@ -172,38 +206,36 @@ const InputPanel = ({ inputs, onInputChange }) => {
     </Box>
   );
 
-  // Custom input field with label and +/- buttons
-  const StepperInput = ({ 
-    label, 
-    value, 
-    name, 
-    endAdornment, 
-    min, 
-    max, 
-    helperText, 
-    startAdornment, 
+  // Modified input component to match the DimensionInput style
+  const NumericInput = ({
+    label,
+    value,
+    name,
+    endAdornment,
+    min,
+    max,
+    helperText,
     step = 1,
-    fullWidth = true 
   }) => (
-    <Box sx={{ mb: 2.5 }}>
+    <div>
       <Typography variant="subtitle2" gutterBottom sx={{ fontWeight: 500, color: 'text.secondary' }}>
         {label}
       </Typography>
-      <Box sx={{ display: 'flex', alignItems: 'center' }}>
-        {/* Minus Button (Left) */}
+      <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
         <Button
           variant="outlined"
           onClick={() => handleStepperClick(name, -step, min, max)}
           sx={{
-            minWidth: '40px',
-            height: '40px',
+            minWidth: isExtraSmallMobile ? '30px' : '40px',
+            width: isExtraSmallMobile ? '30px' : '40px',
+            height: isExtraSmallMobile ? '34px' : '40px',
             padding: 0,
-            borderRadius: '8px 0 0 8px', // Rounded corners matching the design
-            borderRight: 0,
+            borderRadius: '8px',
             fontSize: '1.2rem',
             fontWeight: 'bold',
             color: 'text.secondary',
-            borderColor: 'rgba(0, 0, 0, 0.15)', // Lighter border as in the design
+            borderColor: 'rgba(0, 0, 0, 0.15)',
+            mr: 1,
             '&:hover': {
               borderColor: 'primary.main',
               backgroundColor: 'rgba(0, 0, 0, 0.03)',
@@ -212,76 +244,82 @@ const InputPanel = ({ inputs, onInputChange }) => {
         >
           −
         </Button>
-        
-        {/* Input Field (Center) */}
-        <TextField
-          value={value}
-          onChange={(e) => handleNumericChange(name, e.target.value, min, max)}
-          onFocus={() => handleFocus(name)}
-          onBlur={handleBlur}
-          InputProps={{
-            startAdornment: startAdornment && <InputAdornment position="start">{startAdornment}</InputAdornment>,
-            endAdornment: endAdornment && <InputAdornment position="end">{endAdornment}</InputAdornment>,
-            disableUnderline: true,
-          }}
-          inputProps={{ 
-            min,
-            max,
-            style: { 
-              textAlign: 'center',
-              fontSize: isMobile ? '0.9rem' : '1rem',
-              padding: '8px 0'
-            }
-          }}
-          type="number"
-          variant="outlined"
-          size="medium"
-          fullWidth
-          sx={{
-            '& .MuiOutlinedInput-root': {
-              borderRadius: 0,
-              fontWeight: 500,
-              transition: 'all 0.2s ease-in-out',
-              '& .MuiOutlinedInput-notchedOutline': {
-                borderColor: 'rgba(0, 0, 0, 0.15)', // Lighter border as in the design
-                borderLeftWidth: 0,
-                borderRightWidth: 0,
+        {editingDimension === name ? (
+          <TextField
+            autoFocus
+            value={tempDimensionValue}
+            onChange={handleDimensionChange}
+            onBlur={() => finishEditingDimension(name, min, max)}
+            onKeyDown={(e) => handleDimensionKeyDown(e, name, min, max)}
+            variant="outlined"
+            size="small"
+            type="number"
+            InputProps={{
+              endAdornment: endAdornment && <InputAdornment position="end">{endAdornment}</InputAdornment>,
+            }}
+            inputProps={{
+              min,
+              max,
+              style: { textAlign: 'center' }
+            }}
+            sx={{
+              flexGrow: 1,
+              '& .MuiOutlinedInput-root': {
+                borderRadius: 8,
+                '& .MuiOutlinedInput-input': {
+                  textAlign: 'center',
+                  padding: '8px',
+                  fontSize: isMobile ? '1rem' : '1.25rem',
+                  fontWeight: 500
+                },
+                '& .MuiOutlinedInput-notchedOutline': {
+                  borderColor: 'rgba(0, 0, 0, 0.15)',
+                },
               },
-              '&:hover .MuiOutlinedInput-notchedOutline': {
-                borderColor: 'primary.main',
+              '& input[type=number]::-webkit-inner-spin-button, & input[type=number]::-webkit-outer-spin-button': {
+                WebkitAppearance: 'none',
+                margin: 0
               },
-              '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                borderColor: getFocusBorderColor(name),
-                borderWidth: 1,
-                borderLeftWidth: 0,
-                borderRightWidth: 0,
+              '& input[type=number]': {
+                MozAppearance: 'textfield'
               }
-            },
-            // Remove inner arrows from number inputs
-            '& input[type=number]::-webkit-inner-spin-button, & input[type=number]::-webkit-outer-spin-button': {
-              '-webkit-appearance': 'none',
-              margin: 0
-            },
-            '& input[type=number]': {
-              '-moz-appearance': 'textfield'
-            }
-          }}
-        />
-        
-        {/* Plus Button (Right) */}
+            }}
+          />
+        ) : (
+          <Box
+            onClick={() => startEditingDimension(name, value)}
+            sx={{
+              flexGrow: 1,
+              textAlign: 'center',
+              fontSize: isMobile ? '1rem' : '1.25rem',
+              fontWeight: 500,
+              cursor: 'text',
+              padding: '6px 0',
+              borderRadius: 2,
+              transition: 'all 0.2s ease',
+              '&:hover': {
+                backgroundColor: 'rgba(0, 0, 0, 0.04)'
+              }
+            }}
+          >
+            {value === '' ? '' : Number(value).toLocaleString(language === 'ja' ? 'ja-JP' : 'en-US')}
+            {endAdornment && ` ${endAdornment}`}
+          </Box>
+        )}
         <Button
           variant="outlined"
           onClick={() => handleStepperClick(name, step, min, max)}
           sx={{
-            minWidth: '40px',
-            height: '40px',
+            minWidth: isExtraSmallMobile ? '30px' : '40px',
+            width: isExtraSmallMobile ? '30px' : '40px',
+            height: isExtraSmallMobile ? '34px' : '40px',
             padding: 0,
-            borderRadius: '0 8px 8px 0', // Rounded corners matching the design
-            borderLeft: 0,
+            borderRadius: '8px',
             fontSize: '1.2rem',
             fontWeight: 'bold',
             color: 'text.secondary',
-            borderColor: 'rgba(0, 0, 0, 0.15)', // Lighter border as in the design
+            borderColor: 'rgba(0, 0, 0, 0.15)',
+            ml: 1,
             '&:hover': {
               borderColor: 'primary.main',
               backgroundColor: 'rgba(0, 0, 0, 0.03)',
@@ -296,10 +334,9 @@ const InputPanel = ({ inputs, onInputChange }) => {
           {helperText}
         </Typography>
       )}
-    </Box>
+    </div>
   );
-
-  // Special version for product dimensions that matches the reference and allows editing
+  
   const DimensionInput = ({
     label,
     value,
@@ -314,7 +351,6 @@ const InputPanel = ({ inputs, onInputChange }) => {
         {label} (mm)
       </Typography>
       <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-        {/* Minus Button */}
         <Button
           variant="outlined"
           onClick={() => handleStepperClick(name, -step, min, max)}
@@ -323,11 +359,11 @@ const InputPanel = ({ inputs, onInputChange }) => {
             width: isExtraSmallMobile ? '30px' : '40px',
             height: isExtraSmallMobile ? '34px' : '40px',
             padding: 0,
-            borderRadius: '8px', // Rounded corners matching the design
+            borderRadius: '8px',
             fontSize: '1.2rem',
             fontWeight: 'bold',
             color: 'text.secondary',
-            borderColor: 'rgba(0, 0, 0, 0.15)', // Lighter border as in the design
+            borderColor: 'rgba(0, 0, 0, 0.15)',
             mr: 1,
             '&:hover': {
               borderColor: 'primary.main',
@@ -337,8 +373,6 @@ const InputPanel = ({ inputs, onInputChange }) => {
         >
           −
         </Button>
-        
-        {/* Value Display - Can be edited */}
         {editingDimension === name ? (
           <TextField
             autoFocus
@@ -357,7 +391,7 @@ const InputPanel = ({ inputs, onInputChange }) => {
             sx={{
               flexGrow: 1,
               '& .MuiOutlinedInput-root': {
-                borderRadius: 8, // Rounded corners matching the design
+                borderRadius: 8,
                 '& .MuiOutlinedInput-input': {
                   textAlign: 'center',
                   padding: '8px',
@@ -365,30 +399,29 @@ const InputPanel = ({ inputs, onInputChange }) => {
                   fontWeight: 500
                 },
                 '& .MuiOutlinedInput-notchedOutline': {
-                  borderColor: 'rgba(0, 0, 0, 0.15)', // Lighter border as in the design
+                  borderColor: 'rgba(0, 0, 0, 0.15)',
                 },
               },
-              // Remove inner arrows from number inputs
               '& input[type=number]::-webkit-inner-spin-button, & input[type=number]::-webkit-outer-spin-button': {
-                '-webkit-appearance': 'none',
+                WebkitAppearance: 'none',
                 margin: 0
               },
               '& input[type=number]': {
-                '-moz-appearance': 'textfield'
+                MozAppearance: 'textfield'
               }
             }}
           />
         ) : (
-          <Box 
+          <Box
             onClick={() => startEditingDimension(name, value)}
-            sx={{ 
-              flexGrow: 1, 
-              textAlign: 'center', 
+            sx={{
+              flexGrow: 1,
+              textAlign: 'center',
               fontSize: isMobile ? '1rem' : '1.25rem',
               fontWeight: 500,
               cursor: 'text',
               padding: '6px 0',
-              borderRadius: 2, // Rounded corners matching the design
+              borderRadius: 2,
               transition: 'all 0.2s ease',
               '&:hover': {
                 backgroundColor: 'rgba(0, 0, 0, 0.04)'
@@ -398,8 +431,6 @@ const InputPanel = ({ inputs, onInputChange }) => {
             {value}
           </Box>
         )}
-        
-        {/* Plus Button */}
         <Button
           variant="outlined"
           onClick={() => handleStepperClick(name, step, min, max)}
@@ -408,11 +439,11 @@ const InputPanel = ({ inputs, onInputChange }) => {
             width: isExtraSmallMobile ? '30px' : '40px',
             height: isExtraSmallMobile ? '34px' : '40px',
             padding: 0,
-            borderRadius: '8px', // Rounded corners matching the design
+            borderRadius: '8px',
             fontSize: '1.2rem',
             fontWeight: 'bold',
             color: 'text.secondary',
-            borderColor: 'rgba(0, 0, 0, 0.15)', // Lighter border as in the design
+            borderColor: 'rgba(0, 0, 0, 0.15)',
             ml: 1,
             '&:hover': {
               borderColor: 'primary.main',
@@ -434,19 +465,19 @@ const InputPanel = ({ inputs, onInputChange }) => {
   return (
     <Box>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3.5 }}>
-        <Typography variant="h5" gutterBottom sx={{ 
-          fontWeight: 600, 
-          mt: 1, 
+        <Typography variant="h5" gutterBottom sx={{
+          fontWeight: 600,
+          mt: 1,
           color: 'text.primary',
           fontSize: isMobile ? '1.25rem' : '1.5rem'
         }}>
           {t('simulationParameters')}
         </Typography>
         <Tooltip title={t('printerSpecifications')}>
-          <Box 
-            component="span" 
+          <Box
+            component="span"
             onClick={handleInfoClick}
-            sx={{ 
+            sx={{
               cursor: 'pointer',
               color: 'text.secondary',
               transition: 'all 0.2s',
@@ -464,18 +495,19 @@ const InputPanel = ({ inputs, onInputChange }) => {
           open={infoPopoverOpen}
           anchorEl={infoAnchorEl}
           handleClose={handleInfoClose}
+          initialInvestment={inputs.initialInvestment} // Pass current initialInvestment
+          onInitialInvestmentChange={handleInitialInvestmentChange} // Pass handler
         />
       </Box>
 
-      {/* Product Dimensions - Using the new DimensionInput component */}
       <Fade in={true} timeout={500}>
-        <Card 
-          sx={{ 
-            mb: 3, 
+        <Card
+          sx={{
+            mb: 3,
             overflow: 'visible',
-            borderRadius: 3, // Rounded corners matching the design
-            boxShadow: '0 2px 6px rgba(0, 0, 0, 0.08)', // Subtle shadow as in the design
-            transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+            borderRadius: 3,
+            boxShadow: '0 2px 6px rgba(0, 0, 0, 0.08)',
+            transition: 'transform 0.3s ease, boxShadow 0.3s ease',
             '&:hover': {
               transform: 'translateY(-2px)',
               boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)'
@@ -484,9 +516,8 @@ const InputPanel = ({ inputs, onInputChange }) => {
         >
           <CardContent sx={{ px: { xs: 2, sm: 3 }, py: 2.5 }}>
             <SectionHeader icon={<DimensionsIcon />} title={t('productDimensions')} />
-            
             <Grid container spacing={isMobile ? 2 : 3}>
-              <Grid item xs={12} sm={6}>
+              <Grid item xs={12} sm={6}> {/* Changed from xs={6} for better mobile stacking */}
                 <DimensionInput
                   label={t('shortEdge')}
                   value={inputs.shortEdge}
@@ -496,7 +527,7 @@ const InputPanel = ({ inputs, onInputChange }) => {
                   helperText={`${t('range')}: 10-305mm`}
                 />
               </Grid>
-              <Grid item xs={12} sm={6}>
+              <Grid item xs={12} sm={6}> {/* Changed from xs={6} for better mobile stacking */}
                 <DimensionInput
                   label={t('longEdge')}
                   value={inputs.longEdge}
@@ -511,15 +542,14 @@ const InputPanel = ({ inputs, onInputChange }) => {
         </Card>
       </Fade>
 
-      {/* Sales Volume Slider */}
       <Fade in={true} timeout={600}>
-        <Card 
-          sx={{ 
-            mb: 3, 
+        <Card
+          sx={{
+            mb: 3,
             overflow: 'visible',
-            borderRadius: 3, // Rounded corners matching the design
-            boxShadow: '0 2px 6px rgba(0, 0, 0, 0.08)', // Subtle shadow as in the design
-            transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+            borderRadius: 3,
+            boxShadow: '0 2px 6px rgba(0, 0, 0, 0.08)',
+            transition: 'transform 0.3s ease, boxShadow 0.3s ease',
             '&:hover': {
               transform: 'translateY(-2px)',
               boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)'
@@ -528,12 +558,11 @@ const InputPanel = ({ inputs, onInputChange }) => {
         >
           <CardContent sx={{ px: { xs: 2, sm: 3 }, py: 2.5 }}>
             <SectionHeader icon={<VolumeIcon />} title={t('monthlySalesTarget')} />
-            
             <Box sx={{ px: { xs: 0, sm: 2 }, mt: 2 }}>
               <Grid container spacing={2} alignItems="center" direction={isMobile ? "column" : "row"}>
-                <Grid item xs={12} sm={8}>
+                <Grid item xs={12} sm={isMobile ? 12 : 8}> {/* Full width on mobile */}
                   <Slider
-                    value={inputs.monthlySalesVolume}
+                    value={typeof inputs.monthlySalesVolume === 'number' ? inputs.monthlySalesVolume : 0}
                     onChange={(_, value) => onInputChange('monthlySalesVolume', value)}
                     min={0}
                     max={1000}
@@ -543,6 +572,7 @@ const InputPanel = ({ inputs, onInputChange }) => {
                     sx={{
                       height: 4,
                       padding: '15px 0',
+                      width: '100%', // Ensure slider takes full width in its grid item
                       '& .MuiSlider-rail': {
                         opacity: 0.5,
                         backgroundColor: '#e0e0e0',
@@ -588,62 +618,27 @@ const InputPanel = ({ inputs, onInputChange }) => {
                     }}
                   />
                 </Grid>
-                <Grid item xs={12} sm={4}>
-                  <TextField
+                <Grid item xs={12} sm={isMobile ? 12 : 4}> {/* Full width on mobile */}
+                  <NumericInput
+                    label={t('unitsPerMonth')}
                     value={inputs.monthlySalesVolume}
-                    onChange={(e) => handleNumericChange('monthlySalesVolume', e.target.value, 0, 1000)}
-                    onFocus={() => handleFocus('monthlySalesVolume')}
-                    onBlur={handleBlur}
-                    inputProps={{ 
-                      min: 0, 
-                      max: 1000,
-                      style: { textAlign: 'center', fontWeight: '500', fontSize: isMobile ? '1rem' : '1.1rem' }
-                    }}
-                    type="number"
-                    size="small"
-                    fullWidth
-                    variant="outlined"
-                    sx={{
-                      '& .MuiOutlinedInput-root': {
-                        fontWeight: 500,
-                        borderRadius: '12px', // Rounded corners matching the design
-                        height: '48px',
-                        backgroundColor: '#fff',
-                        transition: 'all 0.2s ease-in-out',
-                        '& .MuiOutlinedInput-notchedOutline': {
-                          borderColor: 'rgba(0, 0, 0, 0.15)', // Lighter border as in the design
-                        },
-                        '&.Mui-focused': {
-                          '& .MuiOutlinedInput-notchedOutline': {
-                            borderColor: theme.palette.primary.main,
-                            borderWidth: 1
-                          }
-                        }
-                      },
-                      // Remove inner arrows from number inputs
-                      '& input[type=number]::-webkit-inner-spin-button, & input[type=number]::-webkit-outer-spin-button': {
-                        '-webkit-appearance': 'none',
-                        margin: 0
-                      },
-                      '& input[type=number]': {
-                        '-moz-appearance': 'textfield'
-                      }
-                    }}
+                    name="monthlySalesVolume"
+                    min={0}
+                    max={1000}
+                    step={10}
+                    helperText={`${t('range')}: 0-1000`}
                   />
                 </Grid>
               </Grid>
-              <Typography variant="body2" color="text.secondary" sx={{ mt: 1, textAlign: 'center', fontWeight: 500, mb: 2 }}>
-                {t('unitsPerMonth')} (0-1000)
-              </Typography>
-              
-              <Grid container spacing={3}>
+              <Grid container spacing={3}> {/* This was spacing={3} */}
                 <Grid item xs={12}>
-                  <StepperInput
-                    label={`${t('salesPricePerUnit')} (${t('currency')})`}
+                  <NumericInput
+                    label={`${t('salesPricePerUnit')}`}
                     value={inputs.salesPricePerUnit}
                     name="salesPricePerUnit"
+                    endAdornment={t('currency')}
                     min={0}
-                    step={50}
+                    step={50} // As per constants.js
                   />
                 </Grid>
               </Grid>
@@ -652,15 +647,14 @@ const InputPanel = ({ inputs, onInputChange }) => {
         </Card>
       </Fade>
 
-      {/* Price Inputs */}
       <Fade in={true} timeout={700}>
-        <Card 
-          sx={{ 
-            mb: 3, 
+        <Card
+          sx={{
+            mb: 3,
             overflow: 'visible',
-            borderRadius: 3, // Rounded corners matching the design
-            boxShadow: '0 2px 6px rgba(0, 0, 0, 0.08)', // Subtle shadow as in the design
-            transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+            borderRadius: 3,
+            boxShadow: '0 2px 6px rgba(0, 0, 0, 0.08)',
+            transition: 'transform 0.3s ease, boxShadow 0.3s ease',
             '&:hover': {
               transform: 'translateY(-2px)',
               boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)'
@@ -669,33 +663,35 @@ const InputPanel = ({ inputs, onInputChange }) => {
         >
           <CardContent sx={{ px: { xs: 2, sm: 3 }, py: 2.5 }}>
             <SectionHeader icon={<PriceIcon />} title={t('priceParameters')} />
-            
             <Grid container spacing={2}>
               <Grid item xs={12}>
-                <StepperInput
-                  label={`${t('materialCostPerUnit')} (${t('currency')})`}
+                <NumericInput
+                  label={`${t('materialCostPerUnit')}`}
                   value={inputs.materialCostPerUnit}
                   name="materialCostPerUnit"
+                  endAdornment={t('currency')}
                   min={0}
-                  step={10}
+                  step={10} // As per constants.js
                 />
               </Grid>
               <Grid item xs={12}>
-                <StepperInput
-                  label={`${t('laborCostPerHour')} (${t('currency')})`}
+                <NumericInput
+                  label={`${t('laborCostPerHour')}`}
                   value={inputs.laborCostPerHour}
                   name="laborCostPerHour"
+                  endAdornment={t('currency')}
                   min={0}
-                  step={100}
+                  step={100} // As per constants.js
                 />
               </Grid>
               <Grid item xs={12}>
-                <StepperInput
-                  label={`${t('inkPrice')} (${t('currency')}/${t('cc')})`}
+                <NumericInput
+                  label={`${t('inkPrice')}`}
                   value={inputs.inkPricePerCC}
                   name="inkPricePerCC"
+                  endAdornment={`${t('currency')}/${t('cc')}`}
                   min={0}
-                  step={1}
+                  step={1} // As per constants.js
                 />
               </Grid>
             </Grid>
@@ -706,4 +702,4 @@ const InputPanel = ({ inputs, onInputChange }) => {
   );
 };
 
-export default InputPanel;
+export default SimulationForm;

@@ -1,67 +1,294 @@
-import React, { useState } from 'react';
-import { 
-  Popover, 
-  Typography, 
+import React from 'react';
+import {
+  Popover,
+  Typography,
   Box,
   TextField,
   InputAdornment,
-  Divider
+  Divider,
+  IconButton,
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  useMediaQuery
 } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
 import { useLanguage } from '../../../context/LanguageContext';
-import LisaImage from '../../../assets/images/lisa.png';
+import { PRINTER_SPECIFICATIONS } from '../../../config/constants';
+import { formatNumber } from '../../../utils/formatters';
+
+// Close icon as inline SVG for better styling
+const CloseIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M18 6L6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+    <path d="M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
+);
 
 /**
  * PrinterInfoPopover Component
- * Displays printer specifications in a popover when info icon is clicked
- * Now with directly editable Initial Investment parameter
- * And sample image display
+ * Displays printer specifications and allows editing initial investment
+ * Uses Popover on desktop and Dialog on mobile for better UX
  */
-const PrinterInfoPopover = ({ open, anchorEl, handleClose, initialInvestment, onInitialInvestmentChange }) => {
-  const { t, language } = useLanguage(); // Get translation function and current language
+const PrinterInfoPopover = ({
+  open,
+  anchorEl,
+  handleClose,
+  initialInvestment,
+  onInitialInvestmentChange,
+  error
+}) => {
+  const theme = useTheme();
+  const { t, language } = useLanguage();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   
-  // State for input value
-  const [tempValue, setTempValue] = useState(initialInvestment);
-  
-  // Format number with commas for display
-  const formatNumber = (num) => {
-    return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-  };
-  
-  // Handle input change
-  const handleInputChange = (event) => {
-    // Remove commas and convert to number
-    const value = parseInt(event.target.value.replace(/,/g, ''), 10);
-    setTempValue(isNaN(value) ? '' : value);
-  };
-  
-  // Handle blur to save value
-  const handleBlur = () => {
-    if (!isNaN(tempValue) && tempValue > 0) {
-      onInitialInvestmentChange(tempValue);
-    } else {
-      // Reset to current value if invalid
-      setTempValue(initialInvestment);
+  // Handle input change for initial investment
+  const handleInvestmentChange = (event) => {
+    const value = event.target.value.replace(/,/g, '');
+    const numValue = parseFloat(value);
+    
+    if (value === '') {
+      onInitialInvestmentChange('');
+    } else if (!isNaN(numValue) && numValue > 0) {
+      onInitialInvestmentChange(numValue);
     }
   };
   
-  // Handle key press events
-  const handleKeyPress = (event) => {
-    if (event.key === 'Enter') {
-      if (!isNaN(tempValue) && tempValue > 0) {
-        onInitialInvestmentChange(tempValue);
-      } else {
-        // Reset to current value if invalid
-        setTempValue(initialInvestment);
-      }
-      event.target.blur();
-    }
-  };
+  // Format value for display
+  const displayValue = initialInvestment === '' 
+    ? '' 
+    : Number(initialInvestment).toLocaleString(language === 'ja' ? 'ja-JP' : 'en-US');
 
-  // Updated text for the sample image section
-  const captionText = language === 'ja' 
+  // Sample image path - update to actual path
+  const sampleImagePath = '/assets/images/lisa.png';
+
+  // Text based on language
+  const printerSpecsTitle = language === 'ja' ? 'MO-180 プリンター仕様' : 'MO-180 Printer Specifications';
+  const samplePrintTitle = language === 'ja' ? 'サンプル印刷' : 'Sample Print';
+  const imageCaption = language === 'ja' 
     ? '全てのシミュレーションは、この画像を基に算出しています'
     : 'Simulations are based on the above image';
+  const baseParamsTitle = language === 'ja' ? '基本パラメータ' : 'Base Parameters';
+  const initialInvestmentLabel = language === 'ja' ? '初期投資:' : 'Initial Investment:';
+  const printableAreaLabel = language === 'ja' ? '印刷領域:' : 'Printable Area:';
   
+  // Use appropriate currency symbol based on language
+  const currencyLabel = language === 'ja' ? '円' : 'JPY';
+  
+  // Content to be displayed in both Popover and Dialog
+  const content = (
+    <>
+      <Box sx={{ p: 2.5 }}>
+        <Typography variant="h6" fontWeight={500}>
+          {printerSpecsTitle}
+        </Typography>
+      </Box>
+
+      <Divider />
+      
+      <Box sx={{ p: 2.5 }}>
+        <Typography variant="body1" fontWeight={500} sx={{ mb: 2 }}>
+          {samplePrintTitle}
+        </Typography>
+        
+        <Box sx={{ 
+          display: 'flex', 
+          justifyContent: 'center', 
+          mb: 2
+        }}>
+          <Box 
+            component="img" 
+            src={sampleImagePath} 
+            alt="Sample Print"
+            sx={{ 
+              maxWidth: isMobile ? '180px' : '220px', 
+              height: 'auto',
+              borderRadius: 1
+            }}
+          />
+        </Box>
+        
+        <Typography variant="body2" color="text.secondary" align="center">
+          {imageCaption}
+        </Typography>
+      </Box>
+
+      <Divider />
+      
+      <Box sx={{ p: 2.5 }}>
+        <Typography variant="body1" fontWeight={500} sx={{ mb: 2 }}>
+          {baseParamsTitle}
+        </Typography>
+        
+        <Box sx={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          mb: 2,
+          flexDirection: isMobile ? 'column' : 'row'
+        }}>
+          <Typography 
+            variant="body1" 
+            sx={{ 
+              mr: isMobile ? 0 : 2, 
+              mb: isMobile ? 1 : 0,
+              minWidth: isMobile ? 'auto' : '90px',
+              alignSelf: isMobile ? 'flex-start' : 'center'
+            }}
+          >
+            {initialInvestmentLabel}
+          </Typography>
+          <TextField
+            value={displayValue}
+            onChange={handleInvestmentChange}
+            variant="outlined"
+            size="small"
+            fullWidth
+            InputProps={{
+              // Always use endAdornment for currency symbol
+              endAdornment: <InputAdornment position="end">{currencyLabel}</InputAdornment>,
+            }}
+            error={Boolean(error)}
+            helperText={error}
+            sx={{
+              '& .MuiOutlinedInput-root': {
+                borderRadius: 1
+              }
+            }}
+          />
+        </Box>
+        
+        <Box sx={{ 
+          display: 'flex', 
+          alignItems: isMobile ? 'flex-start' : 'center',
+          flexDirection: isMobile ? 'column' : 'row'
+        }}>
+          <Typography 
+            variant="body1" 
+            sx={{ 
+              mr: isMobile ? 0 : 2, 
+              mb: isMobile ? 1 : 0,
+              minWidth: isMobile ? 'auto' : '90px' 
+            }}
+          >
+            {printableAreaLabel}
+          </Typography>
+          <Typography variant="body1">
+            {formatNumber(PRINTER_SPECIFICATIONS.printableArea.width, 0)}mm × {formatNumber(PRINTER_SPECIFICATIONS.printableArea.height, 0)}mm
+          </Typography>
+        </Box>
+      </Box>
+    </>
+  );
+
+  // For mobile, use Dialog instead of Popover for better UX
+  if (isMobile) {
+    return (
+      <Dialog
+        open={open}
+        onClose={handleClose}
+        fullWidth
+        maxWidth="xs"
+        PaperProps={{
+          sx: {
+            m: 1,
+            borderRadius: 2,
+            overflow: 'hidden'
+          }
+        }}
+      >
+        <DialogTitle sx={{ 
+          p: 2, 
+          display: 'flex', 
+          justifyContent: 'space-between', 
+          alignItems: 'center',
+          borderBottom: `1px solid ${theme.palette.divider}`
+        }}>
+          <Typography variant="h6" fontWeight={500}>
+            {printerSpecsTitle}
+          </Typography>
+          <IconButton 
+            edge="end" 
+            color="inherit" 
+            onClick={handleClose}
+            aria-label="close"
+          >
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
+        <DialogContent sx={{ p: 0 }}>
+          <Box sx={{ pt: 2.5 }}>
+            <Typography variant="body1" fontWeight={500} sx={{ mb: 2, px: 2.5 }}>
+              {samplePrintTitle}
+            </Typography>
+            
+            <Box sx={{ 
+              display: 'flex', 
+              justifyContent: 'center', 
+              mb: 2
+            }}>
+              <Box 
+                component="img" 
+                src={sampleImagePath} 
+                alt="Sample Print"
+                sx={{ 
+                  maxWidth: '180px', 
+                  height: 'auto',
+                  borderRadius: 1
+                }}
+              />
+            </Box>
+            
+            <Typography variant="body2" color="text.secondary" align="center" sx={{ px: 2.5, mb: 2.5 }}>
+              {imageCaption}
+            </Typography>
+          </Box>
+
+          <Divider />
+          
+          <Box sx={{ p: 2.5 }}>
+            <Typography variant="body1" fontWeight={500} sx={{ mb: 2 }}>
+              {baseParamsTitle}
+            </Typography>
+            
+            <Box sx={{ mb: 2 }}>
+              <Typography variant="body1" sx={{ mb: 1 }}>
+                {initialInvestmentLabel}
+              </Typography>
+              <TextField
+                value={displayValue}
+                onChange={handleInvestmentChange}
+                variant="outlined"
+                size="small"
+                fullWidth
+                InputProps={{
+                  // Always use endAdornment for currency symbol
+                  endAdornment: <InputAdornment position="end">{currencyLabel}</InputAdornment>,
+                }}
+                error={Boolean(error)}
+                helperText={error}
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: 1
+                  }
+                }}
+              />
+            </Box>
+            
+            <Box sx={{ mt: 3 }}>
+              <Typography variant="body1" sx={{ mb: 1 }}>
+                {printableAreaLabel}
+              </Typography>
+              <Typography variant="body1">
+                {formatNumber(PRINTER_SPECIFICATIONS.printableArea.width, 0)}mm × {formatNumber(PRINTER_SPECIFICATIONS.printableArea.height, 0)}mm
+              </Typography>
+            </Box>
+          </Box>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
+  // Desktop version uses Popover
   return (
     <Popover
       open={open}
@@ -76,108 +303,17 @@ const PrinterInfoPopover = ({ open, anchorEl, handleClose, initialInvestment, on
         horizontal: 'right',
       }}
       PaperProps={{
-        sx: { 
-          width: 'auto', 
-          minWidth: 450, 
-          maxWidth: 500, 
-          p: 3,
+        sx: {
+          width: { xs: 320, sm: 400 },
           borderRadius: 2,
-          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)'
+          border: '1px solid rgba(150, 170, 200, 0.3)',
+          boxShadow: '0 4px 15px rgba(0, 0, 0, 0.08)',
+          p: 0,
+          overflow: 'hidden'
         }
       }}
     >
-      <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, borderBottom: '1px solid rgba(0, 0, 0, 0.1)', pb: 1, mb: 2 }}>
-        {t('printerSpecifications')}
-      </Typography>
-      
-      {/* Sample Image Section */}
-      <Box sx={{ mb: 2.5 }}>
-        <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 600, color: 'text.primary', mb: 1 }}>
-          {language === 'ja' ? 'サンプル印刷' : 'Sample Print'}
-        </Typography>
-        
-        <Box sx={{ ml: 1 }}>
-          {/* Image without any title text */}
-          <Box 
-            sx={{
-              width: '100%',
-              display: 'flex',
-              justifyContent: 'center',
-              mb: 1.5
-            }}
-          >
-            <img 
-              src={LisaImage}
-              alt="Lisa"
-              style={{
-                maxWidth: '100%',
-                height: 'auto',
-                borderRadius: '8px',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
-              }}
-            />
-          </Box>
-          
-          <Typography 
-            variant="body2" 
-            sx={{ 
-              fontWeight: 500, 
-              color: 'text.secondary',
-              textAlign: 'center',
-              mb: 1
-            }}
-          >
-            {captionText}
-          </Typography>
-        </Box>
-      </Box>
-      
-      <Divider sx={{ my: 2 }} />
-      
-      {/* Base Parameters Section */}
-      <Box sx={{ mb: 2.5 }}>
-        <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 600, color: 'text.primary', mb: 1 }}>
-          {t('baseParameters')}
-        </Typography>
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, ml: 1 }}>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <Typography variant="body2" sx={{ fontWeight: 500 }}>
-              {t('initialInvestment')}:
-            </Typography>
-            <TextField
-              value={tempValue}
-              onChange={handleInputChange}
-              onBlur={handleBlur}
-              onKeyDown={handleKeyPress}
-              size="small"
-              type="text"
-              InputProps={{
-                startAdornment: language !== 'ja' && <InputAdornment position="start">{t('currency')}</InputAdornment>,
-                endAdornment: language === 'ja' && <InputAdornment position="end">{t('currency')}</InputAdornment>,
-                sx: { fontWeight: 600 }
-              }}
-              sx={{
-                width: '200px',
-                '& .MuiOutlinedInput-root': {
-                  borderRadius: '8px',
-                },
-                // Remove inner arrows from number inputs
-                '& input[type=number]::-webkit-inner-spin-button, & input[type=number]::-webkit-outer-spin-button': {
-                  WebkitAppearance: 'none',
-                  margin: 0
-                },
-                '& input[type=number]': {
-                  MozAppearance: 'textfield'
-                }
-              }}
-            />
-          </Box>
-          <Typography variant="body2" sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontWeight: 500 }}>{t('printableArea')}:</span> 
-            <span style={{ fontWeight: 600 }}>305mm × 458mm</span>
-          </Typography>
-        </Box>
-      </Box>
+      {content}
     </Popover>
   );
 };

@@ -6,32 +6,46 @@ import {
   Box, 
   Paper,
   Fade,
-  useMediaQuery
+  useMediaQuery,
+  Alert,
+  Snackbar
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
-import SimulationForm from './features/simulation/SimulationForm';
-import SimulationResults from './features/simulation/SimulationResults';
+import { lazyLoad } from './utils/code-splitting';
 import LanguageToggle from './components/LanguageToggle/LanguageToggle';
 import { useLanguage } from './context/LanguageContext';
 import useSimulation from './hooks/useSimulation';
 import { getPaybackStatus } from './services/calculationService';
 import { DEFAULT_INPUTS } from './config/constants';
 
+// Lazy load heavy components
+const SimulationForm = lazyLoad(() => import('./features/simulation/SimulationForm'));
+const SimulationResults = lazyLoad(() => import('./features/simulation/SimulationResults'));
+
+/**
+ * Main application content component
+ * Handles layout, simulation state, and error handling
+ */
 function AppContent() {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const isSmallMobile = useMediaQuery(theme.breakpoints.down('sm'));
-  const { t } = useLanguage(); // Get translation function
+  const { t } = useLanguage();
   
-  // Use our custom hook for simulation logic with default inputs from constants
+  // Use our custom hook for simulation logic with default inputs
   const { 
     inputs, 
     results, 
-    handleInputChange 
+    isValid,
+    isCalculating,
+    handleInputChange,
+    formatCurrencyValue
   } = useSimulation(DEFAULT_INPUTS);
   
+  // UI state management
   const [hasCalculated, setHasCalculated] = useState(false);
   const [showAppearAnimation, setShowAppearAnimation] = useState(true);
+  const [error, setError] = useState(null);
 
   // Set calculation flag when results are available
   useEffect(() => {
@@ -67,12 +81,38 @@ function AppContent() {
     }
   };
 
+  // Error handling
+  const handleError = (message) => {
+    setError(message);
+  };
+
+  const handleCloseError = () => {
+    setError(null);
+  };
+
   // To help with the panel width/layout as specified in PRD
   const inputPanelWidth = isMobile ? 12 : 5; // 40-45% on desktop as specified in PRD
   const resultsPanelWidth = isMobile ? 12 : 7; // 55-60% on desktop as specified in PRD
 
   return (
     <Box className="app-wrapper">
+      {/* Error Snackbar */}
+      <Snackbar 
+        open={error !== null} 
+        autoHideDuration={6000} 
+        onClose={handleCloseError}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      >
+        <Alert 
+          onClose={handleCloseError} 
+          severity="error" 
+          variant="filled"
+          sx={{ width: '100%' }}
+        >
+          {error}
+        </Alert>
+      </Snackbar>
+
       {/* Main Content */}
       <Container 
         maxWidth="lg" 
@@ -93,7 +133,11 @@ function AppContent() {
             gutterBottom 
             sx={{ 
               fontWeight: 'bold',
-              fontSize: isSmallMobile ? '1.75rem' : { xs: '2rem', md: '2.5rem' }
+              fontSize: isSmallMobile ? '1.6rem' : { xs: '2rem', md: '2.5rem' },
+              lineHeight: isSmallMobile ? 1.2 : 'inherit',
+              wordBreak: 'keep-all',
+              mt: { xs: 1, sm: 2 },
+              mb: { xs: 1, sm: 2 }
             }}
             className="app-title"
           >
@@ -107,9 +151,12 @@ function AppContent() {
               maxWidth: 700, 
               mx: 'auto', 
               mb: { xs: 2, md: 4 },
-              fontSize: isSmallMobile ? '0.875rem' : 'inherit',
+              fontSize: isSmallMobile ? '0.75rem' : 'inherit',
               animation: showAppearAnimation ? 'fadeIn 1.2s ease-out' : 'none',
-              px: isSmallMobile ? 1 : 0
+              px: isSmallMobile ? 1 : 0,
+              whiteSpace: isSmallMobile ? 'nowrap' : 'normal',
+              overflow: isSmallMobile ? 'hidden' : 'visible',
+              textOverflow: isSmallMobile ? 'ellipsis' : 'clip'
             }}
           >
             {t('evaluateProfitability') || 'Evaluate profitability and ROI for the Roland DG MO-180 UV printer'}
@@ -139,6 +186,7 @@ function AppContent() {
                 <SimulationForm 
                   inputs={inputs} 
                   onInputChange={handleInputChange} 
+                  onError={handleError}
                 />
               </Paper>
             </Box>
@@ -146,10 +194,12 @@ function AppContent() {
           
           {/* Results Panel */}
           <Grid item xs={12} md={resultsPanelWidth}>
-            <Fade in={hasCalculated} timeout={{ enter: 800, exit: 300 }}>
+            <Fade in={hasCalculated && isValid} timeout={{ enter: 800, exit: 300 }}>
               <Box
                 sx={{ 
                   animation: showAppearAnimation ? 'cardAppear 0.9s cubic-bezier(0.34, 1.56, 0.64, 1)' : 'none',
+                  opacity: isCalculating ? 0.7 : 1,
+                  transition: 'opacity 0.3s ease'
                 }}
               >
                 <Paper 
@@ -166,11 +216,28 @@ function AppContent() {
                   }}
                 >
                   {results && (
-                    <SimulationResults results={results} />
+                    <SimulationResults 
+                      results={results} 
+                      isCalculating={isCalculating}
+                      onError={handleError}
+                    />
                   )}
                 </Paper>
               </Box>
             </Fade>
+            
+            {/* Validation warning */}
+            {!isValid && (
+              <Fade in={!isValid} timeout={500}>
+                <Alert 
+                  severity="warning" 
+                  variant="outlined"
+                  sx={{ mt: 2 }}
+                >
+                  {t('validationWarning') || 'Please check your inputs. Some values are invalid or out of range.'}
+                </Alert>
+              </Fade>
+            )}
           </Grid>
         </Grid>
         

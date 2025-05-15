@@ -12,12 +12,12 @@ const SampleImagePanel = () => {
   const { language } = useLanguage();
 
   const captionText = language === 'ja' 
-    ? 'このデータを使用して印刷しています'
-    : 'This data is being used for printing';
+    ? '全てのシミュレーションは、この画像を基に算出しています'
+    : 'Simulations are based on the above image';
 
   const titleText = language === 'ja' 
-    ? 'この画像を印刷した場合'
-    : 'When this image is printed';
+    ? 'サンプル印刷'
+    : 'Sample Print';
 
   return (
     <Box>

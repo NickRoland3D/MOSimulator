@@ -1,167 +1,205 @@
-import React from 'react';
-import { 
-  Popover, 
-  Typography, 
+import React, { useState } from 'react';
+import {
+  Popover,
+  Typography,
   Box,
-  useMediaQuery,
-  useTheme,
-  SwipeableDrawer,
-  IconButton,
+  TextField,
+  InputAdornment,
+  Divider,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
   Button,
-  Grid,
-  Divider
+  IconButton,
+  useMediaQuery
 } from '@mui/material';
-import { useLanguage } from '../../context/LanguageContext';
-
-// Simple close icon component
-const CloseIcon = () => (
-  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M19 6.41L17.59 5L12 10.59L6.41 5L5 6.41L10.59 12L5 17.59L6.41 19L12 13.41L17.59 19L19 17.59L13.41 12L19 6.41Z" fill="currentColor"/>
-  </svg>
-);
+import { useTheme } from '@mui/material/styles';
+import CloseIcon from '@mui/icons-material/Close'; // Using MUI's Close icon
+import { useLanguage } from '../../../context/LanguageContext';
+import LisaImage from '../../../assets/images/lisa.png'; // Ensure this path is correct
 
 /**
  * PrinterInfoPopover Component
- * Displays printer specifications
- * Uses SwipeableDrawer for mobile devices and Popover for desktop
+ * Displays printer specifications.
+ * Uses Material UI Dialog for mobile and Popover for desktop.
+ * Includes editable Initial Investment and sample image display.
  */
-const PrinterInfoPopover = ({ open, anchorEl, handleClose }) => {
-  const { t, language } = useLanguage(); // Get translation function and current language
+const PrinterInfoPopover = ({
+  open,
+  anchorEl,
+  handleClose,
+  initialInvestment,
+  onInitialInvestmentChange
+}) => {
+  const { t, language } = useLanguage();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-  
-  // Content to be displayed in both Popover and Drawer
-  const InfoContent = () => (
-    <Box sx={{ width: '100%' }}>
-      <Grid container spacing={2}>
-        <Grid item xs={12}>
-          <Box sx={{ 
-            display: 'flex', 
-            flexDirection: isMobile ? 'column' : 'row',
-            justifyContent: 'space-between',
-            alignItems: isMobile ? 'flex-start' : 'center',
-            mb: 2
-          }}>
-            <Typography variant="body1" component="span" sx={{ 
-              fontWeight: 500, 
-              mb: isMobile ? 1 : 0,
-              mr: isMobile ? 0 : 2 
-            }}>
+
+  const [tempValue, setTempValue] = useState(initialInvestment);
+
+  // Update tempValue if initialInvestment prop changes
+  React.useEffect(() => {
+    setTempValue(initialInvestment);
+  }, [initialInvestment]);
+
+  const handleInputChange = (event) => {
+    const rawValue = event.target.value.replace(/,/g, '');
+    // Allow empty string for clearing the field, otherwise parse as number
+    if (rawValue === '') {
+      setTempValue('');
+    } else {
+      const value = parseInt(rawValue, 10);
+      setTempValue(isNaN(value) ? '' : value);
+    }
+  };
+
+  const applyInvestmentChange = () => {
+    if (tempValue === '' || isNaN(tempValue) || Number(tempValue) <= 0) {
+      // If invalid or empty, revert to the original initialInvestment
+      setTempValue(initialInvestment);
+      // Optionally call onInitialInvestmentChange with the original value if a reset is desired
+      // onInitialInvestmentChange(initialInvestment);
+    } else {
+      onInitialInvestmentChange(Number(tempValue));
+    }
+  };
+
+  const handleBlur = () => {
+    applyInvestmentChange();
+  };
+
+  const handleKeyPress = (event) => {
+    if (event.key === 'Enter') {
+      applyInvestmentChange();
+      event.target.blur(); // Optional: close popover or blur input
+    }
+  };
+
+  const content = (
+    <>
+      <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, borderBottom: '1px solid rgba(0, 0, 0, 0.1)', pb: 1, mb: 2, display: isMobile ? 'none' : 'block' }}>
+        {t('printerSpecifications')}
+      </Typography>
+
+      {/* Sample Image Section */}
+      <Box sx={{ mb: 2.5 }}>
+        <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 600, color: 'text.primary', mb: 1 }}>
+          {language === 'ja' ? 'サンプル印刷' : 'Sample Print'}
+        </Typography>
+        <Box sx={{ ml: 1 }}>
+          <Box
+            sx={{
+              width: '100%',
+              display: 'flex',
+              justifyContent: 'center',
+              mb: 1.5
+            }}
+          >
+            <img
+              src={LisaImage}
+              alt="Lisa"
+              style={{
+                maxWidth: '100%',
+                maxHeight: isMobile ? '150px' : '200px', // Adjust image size for mobile dialog
+                height: 'auto',
+                borderRadius: '8px',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
+              }}
+            />
+          </Box>
+          <Typography
+            variant="body2"
+            sx={{
+              fontWeight: 500,
+              color: 'text.secondary',
+              textAlign: 'center',
+              mb: 1
+            }}
+          >
+            {language === 'ja'
+              ? '全てのシミュレーションは、この画像を基に算出しています'
+              : 'Simulations are based on the above image'}
+          </Typography>
+        </Box>
+      </Box>
+
+      <Divider sx={{ my: 2 }} />
+
+      {/* Base Parameters Section */}
+      <Box sx={{ mb: 2.5 }}>
+        <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 600, color: 'text.primary', mb: 1 }}>
+          {t('baseParameters')}
+        </Typography>
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, ml: 1 }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Typography variant="body2" sx={{ fontWeight: 500, flexShrink: 0, mr: 2 }}>
               {t('initialInvestment')}:
             </Typography>
-            <Typography variant="body1" component="span" sx={{ 
-              fontWeight: 600,
-              wordBreak: 'break-word'
-            }}>
-              {language === 'ja' ? `3,780,000${t('currency')}` : `${t('currency')} 3,780,000`}
-            </Typography>
+            <TextField
+              value={tempValue === '' ? '' : Number(tempValue).toLocaleString(language === 'ja' ? 'ja-JP' : 'en-US')}
+              onChange={handleInputChange}
+              onBlur={handleBlur}
+              onKeyDown={handleKeyPress}
+              size="small"
+              type="text" // Use text to allow commas, parse to number on change/blur
+              InputProps={{
+                // Always use endAdornment for currency symbol
+                endAdornment: <InputAdornment position="end">{t('currency')}</InputAdornment>,
+                sx: { fontWeight: 600 }
+              }}
+              sx={{
+                width: '200px',
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: '8px',
+                },
+              }}
+            />
           </Box>
-        </Grid>
-        
-        <Grid item xs={12}>
-          <Box sx={{ 
-            display: 'flex', 
-            flexDirection: isMobile ? 'column' : 'row',
-            justifyContent: 'space-between',
-            alignItems: isMobile ? 'flex-start' : 'center' 
-          }}>
-            <Typography variant="body1" component="span" sx={{ 
-              fontWeight: 500, 
-              mb: isMobile ? 1 : 0,
-              mr: isMobile ? 0 : 2 
-            }}>
-              {t('printableArea')}:
-            </Typography>
-            <Typography variant="body1" component="span" sx={{ 
-              fontWeight: 600,
-              wordBreak: 'break-word'
-            }}>
-              305mm × 458mm
-            </Typography>
-          </Box>
-        </Grid>
-      </Grid>
-    </Box>
+          <Typography variant="body2" sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontWeight: 500 }}>{t('printableArea')}:</span>
+            <span style={{ fontWeight: 600 }}>305mm × 458mm</span>
+          </Typography>
+        </Box>
+      </Box>
+    </>
   );
-  
-  // Mobile Drawer version
+
   if (isMobile) {
     return (
-      <SwipeableDrawer
-        anchor="bottom"
+      <Dialog
+        fullScreen
         open={open}
         onClose={handleClose}
-        onOpen={() => {}}
-        disableSwipeToOpen
-        PaperProps={{
-          sx: {
-            borderTopLeftRadius: '16px',
-            borderTopRightRadius: '16px',
-            maxHeight: '85vh',
-            overflow: 'auto'
-          }
-        }}
+        aria-labelledby="printer-info-dialog-title"
       >
-        {/* Handle for swiping */}
-        <Box 
-          sx={{ 
-            width: '40px', 
-            height: '4px', 
-            backgroundColor: 'rgba(0, 0, 0, 0.2)', 
-            borderRadius: '2px',
-            margin: '12px auto 8px'
-          }}
-        />
-        
-        {/* Header */}
-        <Box sx={{ 
-          display: 'flex', 
-          justifyContent: 'space-between', 
-          alignItems: 'center',
-          px: 3,
-          pb: 1,
-          pt: 1
-        }}>
-          <Typography variant="h6" sx={{ fontWeight: 600, fontSize: '1.1rem' }}>
-            {t('printerSpecifications')}
-          </Typography>
-          <IconButton onClick={handleClose} sx={{ p: 1 }}>
+        <DialogTitle id="printer-info-dialog-title" sx={{ py: 1.5, px: 2}}>
+          {t('printerSpecifications')}
+          <IconButton
+            aria-label="close"
+            onClick={handleClose}
+            sx={{
+              position: 'absolute',
+              right: 8,
+              top: 8,
+              color: (theme) => theme.palette.grey[500],
+            }}
+          >
             <CloseIcon />
           </IconButton>
-        </Box>
-        
-        <Divider />
-        
-        {/* Content */}
-        <Box sx={{ p: 3, pt: 2 }}>
-          <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 600, mb: 2 }}>
-            {t('baseParameters')}
-          </Typography>
-          
-          <InfoContent />
-          
-          {/* Bottom button */}
-          <Box sx={{ mt: 4, display: 'flex', justifyContent: 'center' }}>
-            <Button 
-              onClick={handleClose}
-              variant="contained"
-              fullWidth
-              sx={{ 
-                borderRadius: '8px',
-                py: 1.5,
-                fontWeight: 500,
-                maxWidth: '250px'
-              }}
-            >
-              {t('close')}
-            </Button>
-          </Box>
-        </Box>
-      </SwipeableDrawer>
+        </DialogTitle>
+        <DialogContent dividers>
+          {content}
+        </DialogContent>
+        <DialogActions sx={{p:2}}>
+          <Button onClick={handleClose} variant="outlined" color="primary" fullWidth>
+            {t('close')}
+          </Button>
+        </DialogActions>
+      </Dialog>
     );
   }
-  
-  // Desktop Popover version
+
   return (
     <Popover
       open={open}
@@ -176,25 +214,17 @@ const PrinterInfoPopover = ({ open, anchorEl, handleClose }) => {
         horizontal: 'right',
       }}
       PaperProps={{
-        sx: { 
-          width: 'auto', 
-          minWidth: 450, 
-          maxWidth: 500, 
-          p: 3,
+        sx: {
+          width: 'auto',
+          minWidth: 400, // Adjusted minWidth
+          maxWidth: 450, // Adjusted maxWidth
+          p: 2.5,      // Adjusted padding
           borderRadius: 2,
           boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)'
         }
       }}
     >
-      <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, borderBottom: '1px solid rgba(0, 0, 0, 0.1)', pb: 1, mb: 2 }}>
-        {t('printerSpecifications')}
-      </Typography>
-      
-      <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 600, color: 'text.primary', mb: 1 }}>
-        {t('baseParameters')}
-      </Typography>
-      
-      <InfoContent />
+      {content}
     </Popover>
   );
 };

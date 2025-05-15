@@ -123,8 +123,8 @@ const translations = {
   },
   ja: {
     // App title and subtitle
-    moSimulatorTitle: "MO-180 コストシミュレーター",
-    evaluateProfitability: "Roland DG MO-180 UVプリンターの収益性とROIを評価",
+    moSimulatorTitle: "MO-180 コスト計算",
+    evaluateProfitability: "Roland DG MO-180 UVプリンターの収益性評価",
     allRightsReserved: "無断複写・転載を禁じます",
     
     // Header
@@ -183,9 +183,9 @@ const translations = {
     profitLabel: "粗利",
     
     // Status messages
-    excellentInvestment: "優れた投資",
-    goodInvestment: "良い投資",
-    considerCarefully: "慎重に検討",
+    excellentInvestment: "投資効果が非常に高い",
+    goodInvestment: "十分な投資効果が期待できる",
+    considerCarefully: "導入前に十分な検討をおすすめします",
     notProfitable: "収益性なし",
     excellentPaybackPeriod: "優れた回収期間",
     goodPaybackPeriod: "良好な回収期間",

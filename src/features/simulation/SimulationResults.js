@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { 
   Box, 
   Typography, 
@@ -7,46 +7,29 @@ import {
   Fade,
   Card,
   CardContent,
-  Chip
+  Chip,
+  CircularProgress,
+  Tooltip
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import { useLanguage } from '../../context/LanguageContext';
 import { getPaybackStatus } from '../../services/calculationService';
-import ChartTabs from '../visualization/ChartTabs';
+import { lazyLoad } from '../../utils/code-splitting';
+import { formatCurrency, formatPercent, formatNumber } from '../../utils/formatters';
 import { printResults } from '../../utils/pdf/generatePDF';
 import { PRINTER_SPECIFICATIONS } from '../../config/constants';
+
+// Lazy load the charts for better performance
+const ChartTabs = lazyLoad(() => import('../visualization/ChartTabs'));
 
 /**
  * SimulationResults Component
  * Displays the calculated results with enhanced styling and charts
  */
-const SimulationResults = ({ results }) => {
+const SimulationResults = ({ results, isCalculating = false, onError }) => {
   const theme = useTheme();
-  const { t, language } = useLanguage(); // Get translation function and current language
-  
-  // Helper function to format numbers with commas as thousands separators
-  const formatNumber = (num, decimals = 0) => {
-    if (typeof num === 'string') return num;
-    return num.toLocaleString(undefined, { 
-      minimumFractionDigits: decimals,
-      maximumFractionDigits: decimals
-    });
-  };
-
-  // Helper function to format currency - ensuring 円 is always after the number in Japanese
-  const formatCurrency = (amount) => {
-    // Place the currency symbol after the number for Japanese
-    if (language === 'ja') {
-      return `${formatNumber(Math.round(amount))}${t('currency')}`;
-    }
-    // Default format for other languages
-    return `${t('currency')} ${formatNumber(Math.round(amount))}`;
-  };
-
-  // Helper function to format percentage
-  const formatPercent = (value) => {
-    return `${value.toFixed(2)}%`;
-  };
+  const { t, language } = useLanguage();
+  const [isPrinting, setIsPrinting] = useState(false);
   
   // Add inputs to results for charts
   const enhancedResults = {
@@ -146,8 +129,18 @@ const SimulationResults = ({ results }) => {
   );
 
   // Handler for print-to-PDF function
-  const handlePrintResults = () => {
-    printResults(enhancedResults, t);
+  const handlePrintResults = async () => {
+    try {
+      setIsPrinting(true);
+      await printResults(enhancedResults, t);
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      if (onError) {
+        onError(t('pdfGenerationError') || 'Error generating PDF. Please check if popups are allowed.');
+      }
+    } finally {
+      setIsPrinting(false);
+    }
   };
 
   return (
@@ -181,6 +174,25 @@ const SimulationResults = ({ results }) => {
         </Fade>
       </Box>
 
+      {/* Loading indicator */}
+      {isCalculating && (
+        <Box sx={{ 
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          zIndex: 100,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center'
+        }}>
+          <CircularProgress size={40} />
+          <Typography variant="caption" sx={{ mt: 1 }}>
+            {t('calculating')}
+          </Typography>
+        </Box>
+      )}
+
       {/* Main financial metrics with enhanced animations */}
       <Grid container spacing={4} sx={{ mb: 4 }}>
         <Grid item xs={12} sm={6}>
@@ -188,7 +200,7 @@ const SimulationResults = ({ results }) => {
             <Box>
               <ResultCard 
                 title={t('monthlySales')} 
-                value={formatCurrency(results.monthlySales)} 
+                value={formatCurrency(results.monthlySales, language, t('currency'))} 
                 large={true}
               />
             </Box>
@@ -199,7 +211,7 @@ const SimulationResults = ({ results }) => {
             <Box>
               <ResultCard 
                 title={t('monthlyGrossProfit')} 
-                value={formatCurrency(results.monthlyGrossProfit)} 
+                value={formatCurrency(results.monthlyGrossProfit, language, t('currency'))} 
                 large={true}
               />
             </Box>
@@ -224,7 +236,7 @@ const SimulationResults = ({ results }) => {
             <Box>
               <ResultCard 
                 title={t('investmentPaybackPeriod')} 
-                value={results.paybackPeriod === '-' ? 'N/A' : `${results.paybackPeriod.toFixed(1)} ${t('months')}`}
+                value={results.paybackPeriod === '-' ? 'N/A' : `${formatNumber(results.paybackPeriod, 1)} ${t('months')}`}
               />
             </Box>
           </Fade>
@@ -234,7 +246,7 @@ const SimulationResults = ({ results }) => {
             <Box>
               <ResultCard 
                 title={t('costPerUnit')} 
-                value={formatCurrency(results.costPerUnit)}
+                value={formatCurrency(results.costPerUnit, language, t('currency'))}
               />
             </Box>
           </Fade>
@@ -244,7 +256,7 @@ const SimulationResults = ({ results }) => {
             <Box>
               <ResultCard 
                 title={t('operatingHours')} 
-                value={`${results.operatingHours.toFixed(1)} ${t('hours')}`}
+                value={`${formatNumber(results.operatingHours, 1)} ${t('hours')}`}
               />
             </Box>
           </Fade>
@@ -322,25 +334,25 @@ const SimulationResults = ({ results }) => {
               <Grid item xs={4}>
                 <SmallStat 
                   title={t('white')} 
-                  value={`${results.inkUsage.white} ${t('cc')}`}
+                  value={`${formatNumber(results.inkUsage.white, 2)} ${t('cc')}`}
                 />
               </Grid>
               <Grid item xs={4}>
                 <SmallStat 
                   title={t('cmyk')} 
-                  value={`${results.inkUsage.cmyk} ${t('cc')}`}
+                  value={`${formatNumber(results.inkUsage.cmyk, 2)} ${t('cc')}`}
                 />
               </Grid>
               <Grid item xs={4}>
                 <SmallStat 
                   title={t('primer')} 
-                  value={`${results.inkUsage.primer} ${t('cc')}`}
+                  value={`${formatNumber(results.inkUsage.primer, 2)} ${t('cc')}`}
                 />
               </Grid>
             </Grid>
             
             <Typography variant="body2" sx={{ fontWeight: 500 }}>
-              {t('inkCostPerUnit')}: {language === 'ja' ? `${t('approximatePrefix')}${formatNumber(results.inkCostPerUnit)}${t('currency')}` : formatCurrency(results.inkCostPerUnit)}
+              {t('inkCostPerUnit')}: {formatCurrency(results.inkCostPerUnit, language, t('currency'), language === 'ja')}
             </Typography>
             
             {language === 'ja' && (
@@ -353,23 +365,29 @@ const SimulationResults = ({ results }) => {
       </Fade>
 
       <Box sx={{ mt: 4, display: 'flex', justifyContent: 'flex-end' }}>
-        <Button 
-          variant="contained" 
-          color="primary"
-          size="large"
-          sx={{ 
-            px: 3,
-            py: 1.5,
-            fontWeight: 600,
-            boxShadow: 2,
-            '&:hover': {
-              boxShadow: 4
-            }
-          }}
-          onClick={handlePrintResults}
-        >
-          {t('downloadPDF')}
-        </Button>
+        <Tooltip title={isPrinting ? t('generatingPDF') : ''}>
+          <span>
+            <Button 
+              variant="contained" 
+              color="primary"
+              size="large"
+              sx={{ 
+                px: 3,
+                py: 1.5,
+                fontWeight: 600,
+                boxShadow: 2,
+                '&:hover': {
+                  boxShadow: 4
+                }
+              }}
+              onClick={handlePrintResults}
+              disabled={isPrinting}
+              startIcon={isPrinting ? <CircularProgress size={20} color="inherit" /> : null}
+            >
+              {isPrinting ? t('generatingPDF') : t('downloadPDF')}
+            </Button>
+          </span>
+        </Tooltip>
       </Box>
     </Box>
   );
