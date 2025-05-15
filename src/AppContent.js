@@ -241,7 +241,7 @@ function AppContent() {
           </Grid>
         </Grid>
         
-        {/* Footer */}
+        {/* Footer - removed copyright
         <Box 
           component="footer" 
           sx={{ 
@@ -257,6 +257,7 @@ function AppContent() {
             © {new Date().getFullYear()} Roland DG Corporation. {t('allRightsReserved') || 'All rights reserved.'}
           </Typography>
         </Box>
+        */}
       </Container>
     </Box>
   );

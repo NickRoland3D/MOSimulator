@@ -1,11 +1,12 @@
 import React, { useEffect, useRef } from 'react';
-import { Box, Typography, useMediaQuery } from '@mui/material';
+import { Box, Typography, useMediaQuery, Stack, Divider } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import { useLanguage } from '../../../context/LanguageContext';
 
 /**
  * CostBreakdownChart Component
  * Displays a donut chart showing the breakdown of costs using CMYK colors
+ * Completely redesigned for better mobile display
  */
 const CostBreakdownChart = ({ materialCost, inkCost, laborCost }) => {
   const theme = useTheme();
@@ -19,7 +20,7 @@ const CostBreakdownChart = ({ materialCost, inkCost, laborCost }) => {
   const inkPercentage = (inkCost / totalCost) * 100;
   const laborPercentage = (laborCost / totalCost) * 100;
   
-  // Format currency with thousands separators - updated for Japanese format
+  // Format currency with thousands separators - updated for Japanese format and estimates
   const formatCurrency = (amount, isEstimate = false) => {
     if (language === 'ja') {
       return isEstimate 
@@ -42,10 +43,20 @@ const CostBreakdownChart = ({ materialCost, inkCost, laborCost }) => {
     if (!canvas) return;
     
     const ctx = canvas.getContext('2d');
+    
+    // Set the canvas size explicitly for mobile
+    if (isMobile) {
+      canvas.width = 240;
+      canvas.height = 240;
+    } else {
+      canvas.width = 300;
+      canvas.height = 300;
+    }
+    
     const centerX = canvas.width / 2;
     const centerY = canvas.height / 2;
-    const radius = Math.min(centerX, centerY) * (isMobile ? 0.75 : 0.8);
-    const innerRadius = radius * (isMobile ? 0.55 : 0.6); // Donut hole size
+    const radius = Math.min(centerX, centerY) * 0.75;
+    const innerRadius = radius * 0.6; // Donut hole size
     
     // Clear canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -58,13 +69,6 @@ const CostBreakdownChart = ({ materialCost, inkCost, laborCost }) => {
       ctx.closePath();
       ctx.fillStyle = color;
       ctx.fill();
-      
-      // Add highlight effect
-      ctx.beginPath();
-      ctx.arc(centerX, centerY, radius, startAngle, endAngle);
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
-      ctx.lineWidth = 2;
-      ctx.stroke();
     };
     
     // Convert percentages to radians
@@ -84,16 +88,11 @@ const CostBreakdownChart = ({ materialCost, inkCost, laborCost }) => {
     
     drawSegment(startAngle, startAngle + laborAngle, colors.labor);
     
-    // Draw center circle for donut hole with shadow
+    // Draw center circle for donut hole
     ctx.beginPath();
     ctx.arc(centerX, centerY, innerRadius, 0, Math.PI * 2);
     ctx.fillStyle = theme.palette.background.paper;
-    ctx.shadowColor = 'rgba(0, 0, 0, 0.1)';
-    ctx.shadowBlur = 5;
-    ctx.shadowOffsetX = 0;
-    ctx.shadowOffsetY = 2;
     ctx.fill();
-    ctx.shadowColor = 'transparent';
     
     // Format the total cost text with correct currency format
     let displayText;
@@ -103,122 +102,195 @@ const CostBreakdownChart = ({ materialCost, inkCost, laborCost }) => {
       displayText = `${t('currency')} ${Math.round(totalCost).toLocaleString()}`;
     }
     
-    // Draw total cost in center with enhanced styling - smaller font on mobile
+    // Draw total cost in center with optimized styling for mobile
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillStyle = theme.palette.text.primary;
-    ctx.font = `bold ${isMobile ? '14px' : '16px'} ${theme.typography.fontFamily}`;
-    ctx.fillText(displayText, centerX, centerY - (isMobile ? 8 : 10));
     
-    ctx.font = `${isMobile ? '10px' : '12px'} ${theme.typography.fontFamily}`;
+    // Adjust font size based on screen size
+    const fontSize = isMobile ? 13 : 16;
+    ctx.font = `bold ${fontSize}px ${theme.typography.fontFamily}`;
+    ctx.fillText(displayText, centerX, centerY - 8);
+    
+    const subFontSize = isMobile ? 9 : 12;
+    ctx.font = `${subFontSize}px ${theme.typography.fontFamily}`;
     ctx.fillStyle = theme.palette.text.secondary;
-    ctx.fillText(t('totalCostPerUnit'), centerX, centerY + (isMobile ? 12 : 15));
-    
-    // Add 3D effect to segments (subtle shadow)
-    ctx.shadowColor = 'rgba(0, 0, 0, 0.2)';
-    ctx.shadowBlur = 10;
-    ctx.shadowOffsetX = 0;
-    ctx.shadowOffsetY = 4;
-    
-    // Redraw segments with shadow for 3D effect
-    startAngle = -Math.PI / 2;
-    ctx.globalAlpha = 0.1;
-    
-    drawSegment(startAngle, startAngle + materialAngle, 'rgba(0, 0, 0, 0.2)');
-    startAngle += materialAngle;
-    
-    drawSegment(startAngle, startAngle + inkAngle, 'rgba(0, 0, 0, 0.2)');
-    startAngle += inkAngle;
-    
-    drawSegment(startAngle, startAngle + laborAngle, 'rgba(0, 0, 0, 0.2)');
-    
-    // Reset settings
-    ctx.globalAlpha = 1;
-    ctx.shadowColor = 'transparent';
+    ctx.fillText(t('totalCostPerUnit'), centerX, centerY + 8);
     
   }, [materialCost, inkCost, laborCost, theme, materialPercentage, inkPercentage, laborPercentage, colors.material, colors.ink, colors.labor, totalCost, language, t, isMobile]);
   
+  // Use a different layout for mobile vs desktop
+  if (isMobile) {
+    return (
+      <Box sx={{ width: '100%', p: 1 }}>
+        <Typography variant="subtitle1" align="center" sx={{ fontSize: '0.9rem', mb: 1 }}>
+          {t('costBreakdownPerUnit')}
+        </Typography>
+        
+        <Box sx={{ display: 'flex', justifyContent: 'center', mb: 1 }}>
+          <canvas 
+            ref={canvasRef} 
+            style={{ 
+              width: '100%', 
+              height: 'auto',
+              maxWidth: '150px',
+              maxHeight: '150px'
+            }} 
+          />
+        </Box>
+        
+        {/* Legend items in row format for mobile */}
+        <Box sx={{ 
+          display: 'flex', 
+          flexDirection: 'row',
+          flexWrap: 'nowrap',
+          justifyContent: 'space-between',
+          width: '100%',
+          px: 1
+        }}>
+          <Box sx={{ 
+            display: 'flex', 
+            alignItems: 'center',
+            maxWidth: '33%'
+          }}>
+            <Box sx={{ 
+              width: 7, 
+              height: 7, 
+              borderRadius: '50%', 
+              bgcolor: colors.material, 
+              mr: 0.5,
+              flexShrink: 0
+            }} />
+            <Typography variant="caption" sx={{ 
+              fontSize: '0.65rem', 
+              lineHeight: 1, 
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis'
+            }}>
+              {t('material')}: {Math.round(materialPercentage)}%
+            </Typography>
+          </Box>
+          
+          <Box sx={{ 
+            display: 'flex', 
+            alignItems: 'center',
+            maxWidth: '33%'
+          }}>
+            <Box sx={{ 
+              width: 7, 
+              height: 7,  
+              borderRadius: '50%', 
+              bgcolor: colors.ink, 
+              mr: 0.5,
+              flexShrink: 0
+            }} />
+            <Typography variant="caption" sx={{ 
+              fontSize: '0.65rem', 
+              lineHeight: 1, 
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis'
+            }}>
+              {t('ink')}: {Math.round(inkPercentage)}%
+            </Typography>
+          </Box>
+          
+          <Box sx={{ 
+            display: 'flex', 
+            alignItems: 'center',
+            maxWidth: '33%'
+          }}>
+            <Box sx={{ 
+              width: 7, 
+              height: 7,  
+              borderRadius: '50%', 
+              bgcolor: colors.labor, 
+              mr: 0.5,
+              flexShrink: 0
+            }} />
+            <Typography variant="caption" sx={{ 
+              fontSize: '0.65rem', 
+              lineHeight: 1, 
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis'
+            }}>
+              {t('labor')}: {Math.round(laborPercentage)}%
+            </Typography>
+          </Box>
+        </Box>
+      </Box>
+    );
+  }
+  
+  // Desktop layout
   return (
     <Box sx={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-      <Typography variant={isMobile ? "subtitle1" : "h6"} align="center" gutterBottom>
+      <Typography variant="h6" align="center" gutterBottom>
         {t('costBreakdownPerUnit')}
       </Typography>
       
-      {/* Canvas for donut chart */}
       <Box sx={{ 
         position: 'relative', 
         width: '100%', 
-        height: isMobile ? '180px' : '220px', 
+        height: '220px', 
         display: 'flex', 
-        justifyContent: 'center' 
+        justifyContent: 'center'
       }}>
-        <canvas ref={canvasRef} width={300} height={300} style={{ maxWidth: '100%', maxHeight: '100%' }} />
+        <canvas 
+          ref={canvasRef}
+          style={{ maxWidth: '100%', maxHeight: '100%' }} 
+        />
       </Box>
       
-      {/* Legend with enhanced styling - more compact on mobile */}
       <Box sx={{ 
         display: 'flex', 
-        flexDirection: isMobile ? 'column' : 'row',
-        alignItems: isMobile ? 'flex-start' : 'center',
+        flexDirection: 'row',
+        alignItems: 'center',
         justifyContent: 'center', 
-        gap: isMobile ? 0.75 : 3, 
-        mt: isMobile ? 0.5 : 2,
-        px: isMobile ? 1 : 0,
+        gap: 3, 
+        mt: 2,
         width: '100%',
-        maxWidth: isMobile ? '100%' : '350px'
+        maxWidth: '500px'
       }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', width: isMobile ? '100%' : 'auto' }}>
+        <Box sx={{ display: 'flex', alignItems: 'center' }}>
           <Box sx={{ 
-            width: isMobile ? 8 : 12, 
-            height: isMobile ? 8 : 12, 
+            width: 12, 
+            height: 12, 
             borderRadius: '50%', 
             bgcolor: colors.material, 
             mr: 1,
-            flexShrink: 0,
             boxShadow: '0 1px 3px rgba(0, 0, 0, 0.12)'
           }} />
-          <Typography 
-            variant={isMobile ? "caption" : "body2"} 
-            fontWeight={500}
-            sx={{ fontSize: isMobile ? '0.7rem' : 'inherit', whiteSpace: 'nowrap' }}
-          >
+          <Typography variant="body2" fontWeight={500}>
             {t('material')}: {formatCurrency(materialCost)} ({Math.round(materialPercentage)}%)
           </Typography>
         </Box>
-        <Box sx={{ display: 'flex', alignItems: 'center', width: isMobile ? '100%' : 'auto' }}>
+        <Box sx={{ display: 'flex', alignItems: 'center' }}>
           <Box sx={{ 
-            width: isMobile ? 8 : 12, 
-            height: isMobile ? 8 : 12, 
+            width: 12, 
+            height: 12, 
             borderRadius: '50%', 
             bgcolor: colors.ink, 
             mr: 1,
-            flexShrink: 0,
             boxShadow: '0 1px 3px rgba(0, 0, 0, 0.12)'
           }} />
-          <Typography 
-            variant={isMobile ? "caption" : "body2"} 
-            fontWeight={500}
-            sx={{ fontSize: isMobile ? '0.7rem' : 'inherit', whiteSpace: 'nowrap' }}
-          >
-            {t('ink')}: {language === 'ja' ? formatCurrency(inkCost, true) : formatCurrency(inkCost)} ({Math.round(inkPercentage)}%)
+          <Typography variant="body2" fontWeight={500}>
+            {t('ink')}: {formatCurrency(inkCost)} ({Math.round(inkPercentage)}%)
           </Typography>
         </Box>
-        <Box sx={{ display: 'flex', alignItems: 'center', width: isMobile ? '100%' : 'auto' }}>
+        <Box sx={{ display: 'flex', alignItems: 'center' }}>
           <Box sx={{ 
-            width: isMobile ? 8 : 12, 
-            height: isMobile ? 8 : 12,  
+            width: 12, 
+            height: 12,  
             borderRadius: '50%', 
             bgcolor: colors.labor, 
             mr: 1,
-            flexShrink: 0,
             boxShadow: '0 1px 3px rgba(0, 0, 0, 0.12)'
           }} />
-          <Typography 
-            variant={isMobile ? "caption" : "body2"} 
-            fontWeight={500}
-            sx={{ fontSize: isMobile ? '0.7rem' : 'inherit', whiteSpace: 'nowrap' }}
-          >
-            {t('labor')}: {language === 'ja' ? formatCurrency(laborCost, true) : formatCurrency(laborCost)} ({Math.round(laborPercentage)}%)
+          <Typography variant="body2" fontWeight={500}>
+            {t('labor')}: {formatCurrency(laborCost)} ({Math.round(laborPercentage)}%)
           </Typography>
         </Box>
       </Box>
